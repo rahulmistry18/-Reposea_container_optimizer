@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-29T13:46:28.762393+00:00",
+  "fetched_at": "2026-07-29T15:44:14.907299+00:00",
   "source": "synthetic_drift+live_fx",
   "sentiment": "normal",
   "lane_multipliers": {
@@ -10,13 +10,13 @@
   },
   "fbx_rates": {},
   "fx_rates": {
-    "CNY": 6.7713,
-    "EUR": 0.87974,
-    "GBP": 0.75262,
-    "HKD": 7.8416,
-    "JPY": 163.91,
-    "KRW": 1459.45,
-    "SGD": 1.2934
+    "CNY": 6.7663,
+    "EUR": 0.87873,
+    "GBP": 0.7525,
+    "HKD": 7.8424,
+    "JPY": 163.68,
+    "KRW": 1452.35,
+    "SGD": 1.2926
   },
   "disruptions": [
     {
