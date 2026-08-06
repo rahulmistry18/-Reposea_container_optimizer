@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-05T23:50:00.469251+00:00",
+  "fetched_at": "2026-08-06T01:43:25.912465+00:00",
   "source": "synthetic_drift+live_fx",
   "sentiment": "normal",
   "lane_multipliers": {
@@ -43,10 +43,10 @@
     }
   ],
   "top_congestion": {
-    "GBFXT": 0.748,
-    "KRPUS": 0.718,
-    "HKHKG": 0.711,
-    "TWKHH": 0.695,
-    "USLAX": 0.598
+    "HKHKG": 0.717,
+    "USNYC": 0.619,
+    "GBFXT": 0.577,
+    "BEANR": 0.556,
+    "CNQIN": 0.518
   }
 }
