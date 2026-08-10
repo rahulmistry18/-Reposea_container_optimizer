@@ -1,22 +1,22 @@
 {
-  "fetched_at": "2026-08-09T23:21:21.632103+00:00",
-  "source": "synthetic_drift+live_fx",
+  "fetched_at": "2026-08-10T01:00:33.574765+00:00",
+  "source": "synthetic_drift",
   "sentiment": "normal",
   "lane_multipliers": {
-    "TRANS_PAC": 1.251,
-    "TRANS_ATL": 1.12,
-    "ASIA_EUR": 1.329,
-    "INTRA_ASIA": 1.055
+    "TRANS_PAC": 1.177,
+    "TRANS_ATL": 0.907,
+    "ASIA_EUR": 1.204,
+    "INTRA_ASIA": 0.984
   },
   "fbx_rates": {},
   "fx_rates": {
-    "CNY": 6.7476,
-    "EUR": 0.86693,
-    "GBP": 0.74352,
-    "HKD": 7.8449,
-    "JPY": 158.34,
-    "KRW": 1415.95,
-    "SGD": 1.2809
+    "EUR": 0.92,
+    "GBP": 0.79,
+    "CNY": 7.24,
+    "SGD": 1.34,
+    "JPY": 149.5,
+    "KRW": 1320,
+    "HKD": 7.82
   },
   "disruptions": [
     {
@@ -43,10 +43,10 @@
     }
   ],
   "top_congestion": {
-    "CNQIN": 0.413,
-    "USNYC": 0.401,
-    "TWKHH": 0.399,
-    "SGSIN": 0.393,
-    "KRPUS": 0.381
+    "TWKHH": 0.837,
+    "USNYC": 0.789,
+    "HKHKG": 0.783,
+    "JPYOK": 0.71,
+    "USSEA": 0.683
   }
 }
