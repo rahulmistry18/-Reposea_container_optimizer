@@ -1,1 +1,18 @@
+{
+  "_comment": "Edit this file to route container alerts to the right person. 'default' is used for any trade lane not listed below, or if trade_lanes is left empty. 'overrides' lets you pin a specific container_id to a specific person, taking priority over trade_lane routing.",
 
+  "default": {
+    "name": "Fleet Operations",
+    "email": "fleetops@example.com"
+  },
+
+  "trade_lanes": {
+    "TRANS_PAC":  { "name": "Trans-Pacific Desk",  "email": "transpac.desk@example.com" },
+    "TRANS_ATL":  { "name": "Trans-Atlantic Desk",  "email": "transatl.desk@example.com" },
+    "ASIA_EUR":   { "name": "Asia-Europe Desk",     "email": "asiaeur.desk@example.com" },
+    "INTRA_ASIA": { "name": "Intra-Asia Desk",      "email": "intraasia.desk@example.com" }
+  },
+
+  "overrides": {
+  }
+}
