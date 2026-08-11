@@ -5,12 +5,6 @@
     "last_alert_at": "2026-08-11T11:52:23.231224+00:00",
     "owner_email": "asiaeur.desk@example.com"
   },
-  "TCNU7801929": {
-    "first_alert_at": "2026-08-11T13:20:44.794562+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T13:20:44.794562+00:00",
-    "owner_email": "intraasia.desk@example.com"
-  },
   "KKTU7440039": {
     "first_alert_at": "2026-08-11T13:20:44.794562+00:00",
     "escalation_count": 1,
@@ -34,12 +28,6 @@
     "escalation_count": 1,
     "last_alert_at": "2026-08-11T15:05:22.154117+00:00",
     "owner_email": "transpac.desk@example.com"
-  },
-  "FSCU4009486": {
-    "first_alert_at": "2026-08-11T19:11:49.102806+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T19:11:49.102806+00:00",
-    "owner_email": "transatl.desk@example.com"
   },
   "GESU9249422": {
     "first_alert_at": "2026-08-11T19:11:49.102806+00:00",
@@ -76,12 +64,6 @@
     "escalation_count": 1,
     "last_alert_at": "2026-08-11T20:55:38.340509+00:00",
     "owner_email": "transatl.desk@example.com"
-  },
-  "APZU2035508": {
-    "first_alert_at": "2026-08-11T21:56:31.636208+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T21:56:31.636208+00:00",
-    "owner_email": "intraasia.desk@example.com"
   },
   "KKTU2605915": {
     "first_alert_at": "2026-08-11T21:56:31.636208+00:00",
@@ -125,12 +107,6 @@
     "last_alert_at": "2026-08-11T22:53:33.687695+00:00",
     "owner_email": "transpac.desk@example.com"
   },
-  "HLXU6378692": {
-    "first_alert_at": "2026-08-11T22:53:33.687695+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T22:53:33.687695+00:00",
-    "owner_email": "transpac.desk@example.com"
-  },
   "KKTU4508364": {
     "first_alert_at": "2026-08-11T22:53:33.687695+00:00",
     "escalation_count": 1,
@@ -153,6 +129,48 @@
     "first_alert_at": "2026-08-11T22:53:33.687695+00:00",
     "escalation_count": 1,
     "last_alert_at": "2026-08-11T22:53:33.687695+00:00",
+    "owner_email": "intraasia.desk@example.com"
+  },
+  "WSKU1929582": {
+    "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "owner_email": "asiaeur.desk@example.com"
+  },
+  "SUDU6012429": {
+    "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "owner_email": "asiaeur.desk@example.com"
+  },
+  "FSCU5749559": {
+    "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "owner_email": "transpac.desk@example.com"
+  },
+  "HLXU3894706": {
+    "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "owner_email": "transpac.desk@example.com"
+  },
+  "KKTU8534615": {
+    "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "owner_email": "transpac.desk@example.com"
+  },
+  "WSKU7343331": {
+    "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "owner_email": "transpac.desk@example.com"
+  },
+  "ZIMU8619618": {
+    "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
     "owner_email": "intraasia.desk@example.com"
   }
 }
