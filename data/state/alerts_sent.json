@@ -5,12 +5,6 @@
     "last_alert_at": "2026-08-11T09:58:59.854665+00:00",
     "owner_email": null
   },
-  "APZU2345317": {
-    "first_alert_at": "2026-08-11T09:58:59.854665+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T09:58:59.854665+00:00",
-    "owner_email": null
-  },
   "BMOU7940572": {
     "first_alert_at": "2026-08-11T09:58:59.854665+00:00",
     "escalation_count": 1,
@@ -53,19 +47,7 @@
     "last_alert_at": "2026-08-11T09:58:59.854665+00:00",
     "owner_email": null
   },
-  "FSCU4009486": {
-    "first_alert_at": "2026-08-11T09:58:59.854665+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T09:58:59.854665+00:00",
-    "owner_email": null
-  },
   "FSCU5749559": {
-    "first_alert_at": "2026-08-11T09:58:59.854665+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T09:58:59.854665+00:00",
-    "owner_email": null
-  },
-  "GESU7854903": {
     "first_alert_at": "2026-08-11T09:58:59.854665+00:00",
     "escalation_count": 1,
     "last_alert_at": "2026-08-11T09:58:59.854665+00:00",
@@ -96,12 +78,6 @@
     "owner_email": null
   },
   "KKTU2605915": {
-    "first_alert_at": "2026-08-11T09:58:59.854665+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T09:58:59.854665+00:00",
-    "owner_email": null
-  },
-  "KKTU4032808": {
     "first_alert_at": "2026-08-11T09:58:59.854665+00:00",
     "escalation_count": 1,
     "last_alert_at": "2026-08-11T09:58:59.854665+00:00",
@@ -202,5 +178,17 @@
     "escalation_count": 1,
     "last_alert_at": "2026-08-11T09:58:59.854665+00:00",
     "owner_email": null
+  },
+  "SUDU6012429": {
+    "first_alert_at": "2026-08-11T10:02:09.493074+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-11T10:02:09.493074+00:00",
+    "owner_email": "asiaeur.desk@example.com"
+  },
+  "UACU7914787": {
+    "first_alert_at": "2026-08-11T10:02:09.493074+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-11T10:02:09.493074+00:00",
+    "owner_email": "transatl.desk@example.com"
   }
 }
