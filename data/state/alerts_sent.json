@@ -5,12 +5,6 @@
     "last_alert_at": "2026-08-11T11:52:23.231224+00:00",
     "owner_email": "asiaeur.desk@example.com"
   },
-  "APZU2345317": {
-    "first_alert_at": "2026-08-11T15:05:22.154117+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T15:05:22.154117+00:00",
-    "owner_email": "asiaeur.desk@example.com"
-  },
   "FCIU7302278": {
     "first_alert_at": "2026-08-11T20:55:38.340509+00:00",
     "escalation_count": 1,
@@ -41,12 +35,6 @@
     "last_alert_at": "2026-08-11T21:56:31.636208+00:00",
     "owner_email": "transpac.desk@example.com"
   },
-  "EITU3189964": {
-    "first_alert_at": "2026-08-11T22:53:33.687695+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T22:53:33.687695+00:00",
-    "owner_email": "transpac.desk@example.com"
-  },
   "WSKU1929582": {
     "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
     "escalation_count": 1,
@@ -59,19 +47,7 @@
     "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
     "owner_email": "asiaeur.desk@example.com"
   },
-  "FSCU5749559": {
-    "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
-    "owner_email": "transpac.desk@example.com"
-  },
   "KKTU8534615": {
-    "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
-    "escalation_count": 1,
-    "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
-    "owner_email": "transpac.desk@example.com"
-  },
-  "WSKU7343331": {
     "first_alert_at": "2026-08-11T23:50:58.152013+00:00",
     "escalation_count": 1,
     "last_alert_at": "2026-08-11T23:50:58.152013+00:00",
@@ -131,10 +107,64 @@
     "last_alert_at": "2026-08-12T06:20:01.296546+00:00",
     "owner_email": "transpac.desk@example.com"
   },
-  "FSCU4009486": {
-    "first_alert_at": "2026-08-12T06:20:01.296546+00:00",
+  "CMAU6366286": {
+    "first_alert_at": "2026-08-12T08:24:18.628873+00:00",
     "escalation_count": 1,
-    "last_alert_at": "2026-08-12T06:20:01.296546+00:00",
+    "last_alert_at": "2026-08-12T08:24:18.628873+00:00",
     "owner_email": "transatl.desk@example.com"
+  },
+  "TRLU4366952": {
+    "first_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "owner_email": "transatl.desk@example.com"
+  },
+  "TRLU7560355": {
+    "first_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "owner_email": "transatl.desk@example.com"
+  },
+  "GESU9249422": {
+    "first_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "owner_email": "intraasia.desk@example.com"
+  },
+  "MSKU1014608": {
+    "first_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "owner_email": "intraasia.desk@example.com"
+  },
+  "TCNU7801929": {
+    "first_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "owner_email": "intraasia.desk@example.com"
+  },
+  "KKTU4508364": {
+    "first_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "owner_email": "transpac.desk@example.com"
+  },
+  "KKTU8049475": {
+    "first_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "owner_email": "asiaeur.desk@example.com"
+  },
+  "KKTU4032808": {
+    "first_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "owner_email": "asiaeur.desk@example.com"
+  },
+  "MAEU3543646": {
+    "first_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "escalation_count": 1,
+    "last_alert_at": "2026-08-12T08:24:18.628873+00:00",
+    "owner_email": "asiaeur.desk@example.com"
   }
 }
