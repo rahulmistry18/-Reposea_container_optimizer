@@ -1,37 +1,52 @@
 {
-  "fetched_at": "2026-04-03T08:50:40.830140+00:00",
-  "source": "synthetic_drift",
+  "fetched_at": "2026-08-12T02:30:00.961501+00:00",
+  "source": "synthetic_drift+live_fx",
   "sentiment": "normal",
   "lane_multipliers": {
-    "TRANS_PAC": 0.918,
-    "TRANS_ATL": 1.17,
-    "ASIA_EUR": 1.353,
-    "INTRA_ASIA": 1.024
+    "TRANS_PAC": 1.177,
+    "TRANS_ATL": 0.907,
+    "ASIA_EUR": 1.204,
+    "INTRA_ASIA": 0.984
   },
   "fbx_rates": {},
   "fx_rates": {
-    "EUR": 0.92,
-    "GBP": 0.79,
-    "CNY": 7.24,
-    "SGD": 1.34,
-    "JPY": 149.5,
-    "KRW": 1320,
-    "HKD": 7.82
+    "CNY": 6.7453,
+    "EUR": 0.86655,
+    "GBP": 0.74075,
+    "HKD": 7.8463,
+    "JPY": 159.2,
+    "KRW": 1412.17,
+    "SGD": 1.2802
   },
   "disruptions": [
+    {
+      "name": "Typhoon Season",
+      "lanes": [
+        "TRANS_PAC",
+        "INTRA_ASIA"
+      ],
+      "factor": 1.3
+    },
     {
       "name": "Suez Congestion",
       "lanes": [
         "ASIA_EUR"
       ],
       "factor": 1.15
+    },
+    {
+      "name": "Us West Coast Labour",
+      "lanes": [
+        "TRANS_PAC"
+      ],
+      "factor": 1.25
     }
   ],
   "top_congestion": {
-    "USLAX": 0.642,
-    "USNYC": 0.566,
-    "USSEA": 0.559,
-    "CNYTN": 0.547,
-    "CNQIN": 0.543
+    "USSEA": 0.761,
+    "CNQIN": 0.759,
+    "NLRTM": 0.755,
+    "GBFXT": 0.67,
+    "TWKHH": 0.632
   }
 }

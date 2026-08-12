@@ -150,6 +150,7 @@ PYTHONPATH=$(pwd) python -m pipeline.alerts
 
 ---
 
+<<<<<<< HEAD
 ## Container Lifecycle & Case Closure
 
 A container isn't tracked forever. Once it's been overdue long enough to
@@ -215,6 +216,8 @@ This clears `data/state/`, `data/bronze/`, `data/silver/`, and `data/gold/`
 
 ---
 
+
+>>>>>>> 76e956aa78553138a7a7899222941f804c3e6f72
 ## Tests
 
 ```bash

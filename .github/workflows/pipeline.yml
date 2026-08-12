@@ -67,6 +67,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
 
+<<<<<<< HEAD
       # Only runs when "reset" is ticked on a manual "Run workflow" — never
       # on the hourly schedule or on a push. This is the reset button:
       # Actions tab -> Run workflow -> tick "reset" -> Run workflow.
@@ -76,6 +77,8 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
 
+=======
+>>>>>>> 76e956aa78553138a7a7899222941f804c3e6f72
       - name: Run pipeline
         run: python -m pipeline.run_pipeline --env ${{ inputs.env || 'prod' }}
         env:
@@ -126,8 +129,11 @@ jobs:
           git add data/exports/reposea_report.xlsx || true
           git add data/state/container_history.json || true
           git add data/state/alerts_sent.json || true
+<<<<<<< HEAD
           git add data/state/container_ledger.json || true
           git add data/state/completed_containers.json || true
+=======
+>>>>>>> 76e956aa78553138a7a7899222941f804c3e6f72
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
