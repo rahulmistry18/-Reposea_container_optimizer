@@ -58,6 +58,15 @@ def run_pipeline(env: str = "dev") -> bool:
         from pipeline.gold_aggregate import run as gold_run
         gold_df = gold_run()
 
+        # ── ALERTS ──────────────────────────────────────────────────────────
+        # Never let a mail problem fail the data pipeline — log and continue.
+        banner("STAGE 4 / 4 — Escalation Alerts")
+        try:
+            from pipeline.alerts import run as alerts_run
+            alerts_run()
+        except Exception as alert_exc:
+            log.warning(f"Alerts stage skipped due to error: {alert_exc}")
+
         # ── DONE ────────────────────────────────────────────────────────────
         elapsed = round(time.time() - start, 2)
         crit = sum(gold_df.action_status == "Critical")

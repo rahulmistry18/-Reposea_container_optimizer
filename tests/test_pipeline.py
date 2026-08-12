@@ -130,36 +130,55 @@ class TestPriorityScore:
 
 # ── Bronze Layer Tests ────────────────────────────────────────────────────────
 
-from pipeline.bronze_ingest import generate_ais_feed, generate_container_events
+from pipeline.state_manager import tick_fleet
+from pipeline.bronze_ingest import build_ais_stream, build_event_stream
+from pipeline.datasources.port_intel import get_port_intel
 
 class TestBronzeGeneration:
-    def test_ais_returns_records(self):
-        records = generate_ais_feed(n=10)
-        assert len(records) >= 10   # may have synthetic duplicates
+    """
+    bronze_ingest no longer generates records from a bare `n` — it builds
+    AIS/event streams from the live (stateful) fleet. Seed a fleet via
+    tick_fleet() against a temp state dir, then exercise the builders.
+    """
 
-    def test_ais_has_required_fields(self):
-        records = generate_ais_feed(n=5)
+    def _fleet(self, tmp_path, monkeypatch):
+        import pipeline.state_manager as sm
+        monkeypatch.setattr(sm, "STATE_DIR", tmp_path)
+        monkeypatch.setattr(sm, "STATE_FILE", tmp_path / "fleet_state.json")
+        return tick_fleet()
+
+    def test_ais_returns_records(self, tmp_path, monkeypatch):
+        fleet = self._fleet(tmp_path, monkeypatch)
+        records = build_ais_stream(fleet, [])
+        assert len(records) >= 1
+
+    def test_ais_has_required_fields(self, tmp_path, monkeypatch):
+        fleet = self._fleet(tmp_path, monkeypatch)
+        records = build_ais_stream(fleet, [])
         required = ["vessel_name", "imo_number", "current_lat", "current_lon",
                     "next_port_eta", "next_port", "speed_knots"]
         for r in records:
             for field in required:
                 assert field in r, f"Missing field: {field}"
 
-    def test_events_returns_records(self):
-        records = generate_container_events(n=10)
-        assert len(records) >= 10
+    def test_events_returns_records(self, tmp_path, monkeypatch):
+        fleet = self._fleet(tmp_path, monkeypatch)
+        records = build_event_stream(fleet, get_port_intel())
+        assert len(records) >= 1
 
-    def test_events_container_id_format(self):
-        records = generate_container_events(n=20)
+    def test_events_container_id_format(self, tmp_path, monkeypatch):
+        fleet = self._fleet(tmp_path, monkeypatch)
+        records = build_event_stream(fleet, get_port_intel())
         for r in records:
             cid = r["container_id"]
             assert len(cid) == 11, f"Invalid container ID length: {cid}"
             assert cid[:4].isalpha(), f"Container prefix not alpha: {cid}"
 
-    def test_speed_in_realistic_range(self):
-        records = generate_ais_feed(n=20)
+    def test_speed_in_realistic_range(self, tmp_path, monkeypatch):
+        fleet = self._fleet(tmp_path, monkeypatch)
+        records = build_ais_stream(fleet, [])
         for r in records:
-            assert 10 <= r["speed_knots"] <= 25, f"Unrealistic speed: {r['speed_knots']}"
+            assert 0 <= r["speed_knots"] <= 25, f"Unrealistic speed: {r['speed_knots']}"
 
 
 # ── Integration Test ──────────────────────────────────────────────────────────

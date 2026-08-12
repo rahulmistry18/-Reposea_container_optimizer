@@ -1,7 +1,14 @@
 name: RepoSea Setup — First-Time Configuration
 
-# Runs on first push to main (fork or original).
-# Bootstraps pipeline, patches URLs, deploys GitHub Pages.
+# Runs ONCE — the very first time this repo is set up (fork or original).
+# Bootstraps the pipeline, patches URLs, deploys GitHub Pages, then marks
+# itself done via .github/.setup_complete so it never runs meaningful work
+# again — this prevents it from firing alongside pipeline.yml on every
+# ordinary code push (which was causing two workflows to git push at the
+# same time and conflict with each other).
+#
+# To re-run setup deliberately, delete .github/.setup_complete and push,
+# or use workflow_dispatch (which always runs regardless of the marker).
 
 on:
   push:
@@ -19,12 +26,39 @@ permissions:
   id-token: write
   actions:  write
 
+concurrency:
+  group: reposea-git-write-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  # ── Guard: only let this run once, ever, on a plain push ──────────────────
+  check:
+    name: "Check setup status"
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manually triggered — running regardless of setup marker."
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          elif [ -f ".github/.setup_complete" ]; then
+            echo "Initial setup already completed — skipping (this workflow only runs once automatically)."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "No setup marker found — running initial setup."
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          fi
+
   setup-and-run:
     name: "Bootstrap RepoSea pipeline"
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -52,6 +86,12 @@ jobs:
         run: python -m pipeline.run_pipeline --env prod
         env:
           PYTHONPATH: ${{ github.workspace }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          DASHBOARD_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
 
       - name: Generate Excel report
         run: python -m pipeline.export_excel
@@ -70,17 +110,33 @@ jobs:
             sed -i "s|YOUR_USERNAME|${OWNER}|g" "$FILE"
           done
 
+      - name: Mark initial setup complete
+        run: |
+          mkdir -p .github
+          echo "RepoSea initial setup completed on $(date -u +'%Y-%m-%dT%H:%M:%SZ') — this workflow will not auto-run again." > .github/.setup_complete
+
       - name: Commit outputs
         run: |
           git config user.name  "RepoSea Bot"
           git config user.email "pipeline@reposea.bot"
+          git add .github/.setup_complete
           git add data/gold/ data/exports/ dashboard/ docs/ README.md
           git add data/state/container_history.json 2>/dev/null || true
+          git add data/state/alerts_sent.json 2>/dev/null || true
+          git add data/state/container_ledger.json 2>/dev/null || true
+          git add data/state/completed_containers.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Nothing to commit"
           else
             git commit -m "chore: initial pipeline run [skip ci]"
-            git push
+            # Guard against a race with another workflow pushing at the same
+            # moment — rebase onto whatever landed first and retry a few times
+            # rather than failing outright.
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "Push attempt $i failed — retrying after rebase..."
+              sleep $((i * 5))
+            done
           fi
 
       - name: Build GitHub Pages bundle

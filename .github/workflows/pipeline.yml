@@ -12,6 +12,11 @@ on:
         default: "prod"
         type: choice
         options: [prod, dev]
+      reset:
+        description: "Reset fleet — wipe all simulated state and start a fresh fleet before running"
+        required: false
+        default: false
+        type: boolean
 
   push:
     branches: [main]
@@ -25,7 +30,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pipeline-${{ github.ref }}
+  group: reposea-git-write-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -57,11 +62,33 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Run test suite
+        run: python -m pytest tests/ -q
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      # Only runs when "reset" is ticked on a manual "Run workflow" — never
+      # on the hourly schedule or on a push. This is the reset button:
+      # Actions tab -> Run workflow -> tick "reset" -> Run workflow.
+      - name: Reset fleet (manual only)
+        if: ${{ inputs.reset == true }}
+        run: python -m pipeline.reset --yes
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
       - name: Run pipeline
         run: python -m pipeline.run_pipeline --env ${{ inputs.env || 'prod' }}
         env:
           PYTHONPATH: ${{ github.workspace }}
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          # 2-week overdue escalation emails (pipeline/alerts.py, run as Stage 4).
+          # Leave these secrets unset and alerts run in DRY RUN (logged, not sent).
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          DASHBOARD_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
 
       - name: Generate Excel report
         run: python -m pipeline.export_excel
@@ -98,11 +125,18 @@ jobs:
           git add data/gold/
           git add data/exports/reposea_report.xlsx || true
           git add data/state/container_history.json || true
+          git add data/state/alerts_sent.json || true
+          git add data/state/container_ledger.json || true
+          git add data/state/completed_containers.json || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
             git commit -m "chore(data): pipeline run $(date -u +'%Y-%m-%dT%H:%M:%SZ') [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "Push attempt $i failed — retrying after rebase..."
+              sleep $((i * 5))
+            done
           fi
 
       - name: Upload artifacts

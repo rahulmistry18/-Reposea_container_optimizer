@@ -185,6 +185,22 @@ def append_and_clean(gold_rows: list, run_number: int) -> dict:
     return stats
 
 
+def append_closure_snapshot(container_id: str, snapshot: dict) -> None:
+    """
+    Append a single final snapshot for a container whose case was closed
+    out directly by state_manager (it's excluded from the fleet the moment
+    it completes, so it never passes through the normal Gold → history
+    flow — without this it would just vanish from its own journey view).
+    """
+    history = _load_history()
+    if container_id not in history:
+        history[container_id] = []
+    history[container_id].append(snapshot)
+    if len(history[container_id]) > MAX_PER_CONTAINER:
+        history[container_id] = history[container_id][-MAX_PER_CONTAINER:]
+    _save_history(history)
+
+
 def get_journey(container_id: str) -> dict:
     """
     Return the full journey history for one container.

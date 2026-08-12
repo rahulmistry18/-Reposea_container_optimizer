@@ -13,6 +13,14 @@ On every pipeline run:
   4. Replace COMPLETE containers with fresh spawns
   5. Save state back to disk
 
+Ledger (container closure tracking):
+  container_ledger.json      PRIMARY ledger — every container ever tracked,
+                              both active and resolved, one record each,
+                              upserted every run. Source of truth.
+  completed_containers.json  FINAL ledger — resolved-only, always fetched/
+                              derived from the primary ledger (never written
+                              independently), so the two can't drift apart.
+
 Initial seed gives a realistic mix:
   15% GATE_IN · 40% AT_SEA · 5% ARRIVED · 25% IN_FREE_DAYS · 15% OVERDUE
 """
@@ -30,7 +38,21 @@ STATE_DIR  = Path(__file__).parent.parent / "data" / "state"
 STATE_FILE = STATE_DIR / "fleet_state.json"
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 
+CLOSURE_LOG_FILE = STATE_DIR / "completed_containers.json"   # final ledger — resolved only, derived from LEDGER_FILE
+LEDGER_FILE      = STATE_DIR / "container_ledger.json"        # primary ledger — every container, active + resolved
+MAX_CLOSURE_LOG_ENTRIES = 500
+
 FLEET_SIZE = 35
+
+# A container's case is deterministically closed out (marked COMPLETE, logged,
+# and replaced by a fresh spawn) once it's been overdue long enough to have
+# received its 2-week escalation email (pipeline/alerts.py ESCALATION_THRESHOLD_DAYS)
+# plus a further grace period of at most 1 week for the responsible person to
+# act — after that, the case is considered handled and the fleet moves on.
+# Keep this in sync with pipeline/alerts.py if that threshold ever changes.
+ESCALATION_THRESHOLD_DAYS  = 14   # when the first overdue email goes out
+RESOLUTION_GRACE_DAYS      = 7    # max additional time before the case is closed
+CLOSURE_AFTER_OVERDUE_DAYS = ESCALATION_THRESHOLD_DAYS + RESOLUTION_GRACE_DAYS  # 21
 
 # ── Reference tables ──────────────────────────────────────────────────────────
 
@@ -363,16 +385,82 @@ def _advance(c: dict, hours: float) -> dict:
             c["penalty_accrued_usd"] = round(prev_penalty + penalty_delta, 2)
             c["lifecycle_stage"]     = "OVERDUE"
 
-            # Simulate commercial resolution of very overdue containers (10% chance past 10d)
+            # Deterministic case closure: once a container has been overdue
+            # long enough to have received its 2-week escalation email plus
+            # the grace period, treat it as resolved by the responsible
+            # person and retire it — this keeps the fleet moving instead of
+            # letting penalties accrue forever, and makes room for the next
+            # batch of containers to enter (see tick_fleet's replenishment).
             overdue_days = abs(buffer_seconds) / 86400
-            if overdue_days > 10 and random.random() < 0.10:
+            if overdue_days >= CLOSURE_AFTER_OVERDUE_DAYS:
                 c["lifecycle_stage"] = "COMPLETE"
                 c["completed_at"]    = now.isoformat()
+                c["closure_reason"]  = (
+                    f"Resolved after {overdue_days:.1f}d overdue "
+                    f"({ESCALATION_THRESHOLD_DAYS}d escalation + {RESOLUTION_GRACE_DAYS}d grace)"
+                )
         else:
             c["lifecycle_stage"]     = "IN_FREE_DAYS"
             c["penalty_accrued_usd"] = 0.0
 
     return c
+
+
+# ── Ledger: primary (all containers, active + resolved) + final (resolved only) ─
+
+def _load_ledger() -> dict:
+    """Primary ledger — dict keyed by container_id, one record per container
+    ever tracked, covering BOTH active and resolved containers. This is the
+    single source of truth; the final ledger below is always derived from it."""
+    if LEDGER_FILE.exists():
+        try:
+            return json.loads(LEDGER_FILE.read_text())
+        except Exception as e:
+            log.warning(f"Ledger corrupt, resetting: {e}")
+    return {}
+
+
+def _save_ledger(ledger: dict) -> None:
+    LEDGER_FILE.write_text(json.dumps(ledger, indent=2, default=str))
+
+
+def _upsert_ledger(ledger: dict, c: dict, status: str, now_iso: str) -> None:
+    """Insert or update this container's record in the primary ledger.
+    status is 'active' for every container still in the fleet, or
+    'resolved' the moment it closes out. first_seen is preserved across
+    updates; everything else reflects the container's latest known state."""
+    cid = c.get("container_id")
+    existing = ledger.get(cid, {})
+    ledger[cid] = {
+        "container_id":        cid,
+        "status":               status,
+        "trade_lane":           c.get("trade_lane"),
+        "lease_type":           c.get("lease_type"),
+        "vessel_name":          c.get("vessel_name"),
+        "origin_locode":        c.get("origin_locode"),
+        "dest_locode":          c.get("dest_locode"),
+        "per_diem_rate":        c.get("per_diem_rate"),
+        "lifecycle_stage":      c.get("lifecycle_stage"),
+        "penalty_accrued_usd":  c.get("penalty_accrued_usd", 0),
+        "first_seen":           existing.get("first_seen", now_iso),
+        "last_updated":         now_iso,
+        "completed_at":         c.get("completed_at")   if status == "resolved" else existing.get("completed_at"),
+        "closure_reason":       c.get("closure_reason")  if status == "resolved" else existing.get("closure_reason"),
+    }
+
+
+def _export_final_ledger(ledger: dict) -> None:
+    """
+    The final ledger is not written independently — it's fetched from the
+    primary ledger by filtering to status == 'resolved'. This guarantees
+    the two files can never drift out of sync with each other; the primary
+    ledger is always the source of truth.
+    """
+    resolved = [rec for rec in ledger.values() if rec.get("status") == "resolved"]
+    resolved.sort(key=lambda r: r.get("completed_at") or "")
+    if len(resolved) > MAX_CLOSURE_LOG_ENTRIES:
+        resolved = resolved[-MAX_CLOSURE_LOG_ENTRIES:]
+    CLOSURE_LOG_FILE.write_text(json.dumps(resolved, indent=2, default=str))
 
 
 # ── Load / Save ───────────────────────────────────────────────────────────────
@@ -397,6 +485,28 @@ def _load() -> dict:
 
 def _save(state: dict) -> None:
     STATE_FILE.write_text(json.dumps(state, indent=2, default=str))
+
+
+def _log_final_snapshot(c: dict, run_number: int) -> None:
+    """Write one last dashboard-visible history entry before a closed
+    container disappears from the active fleet, so its journey view ends
+    with 'Resolved' instead of just stopping without explanation."""
+    from pipeline.history_tracker import append_closure_snapshot
+    now = datetime.now(timezone.utc)
+    snap = {
+        "ts":     now.isoformat()[:19],
+        "run":    run_number,
+        "stage":  "COMPLETE",
+        "lat":    round(float(c.get("current_lat", 0) or 0), 3),
+        "lon":    round(float(c.get("current_lon", 0) or 0), 3),
+        "dtl":    0.0,
+        "status": "Resolved",
+        "burn":   round(float(c.get("penalty_accrued_usd", 0) or 0), 1),
+        "pct":    100,
+        "vessel": str(c.get("vessel_name", ""))[:30],
+        "loc":    ("Case closed — " + str(c.get("closure_reason", "")))[:60],
+    }
+    append_closure_snapshot(c.get("container_id"), snap)
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -442,6 +552,8 @@ def tick_fleet() -> list:
             containers.append(c_new)
 
     # Advance all non-COMPLETE containers
+    ledger    = _load_ledger()
+    now_iso   = now.isoformat()
     active    = []
     completed = 0
     for c in containers:
@@ -451,6 +563,13 @@ def tick_fleet() -> list:
         advanced = _advance(c, elapsed)
         if advanced["lifecycle_stage"] == "COMPLETE":
             completed += 1
+            _upsert_ledger(ledger, advanced, "resolved", now_iso)
+            _log_final_snapshot(advanced, state.get("run_count", 0) + 1)
+            log.info(
+                f"  ✓ Closed {advanced['container_id']} — "
+                f"${advanced.get('penalty_accrued_usd', 0):,.2f} accrued — "
+                f"logged to ledger, replacing with next batch"
+            )
         else:
             active.append(advanced)
 
@@ -463,6 +582,15 @@ def tick_fleet() -> list:
         new_c["spawn_run"] = state.get("run_count", 0) + 1  # +1 because run_count increments after
         active.append(new_c)
         log.info(f"  + Spawned {new_c['container_id']} ({new_c['trade_lane']} | {new_c['lease_type']} | stage={new_c['lifecycle_stage']})")
+
+    # Primary ledger: every currently-active container gets upserted with
+    # status="active" — the resolved entries above were already written in
+    # the same pass, so this single ledger now holds both, and the final
+    # ledger (completed_containers.json) is fetched from it below.
+    for c in active:
+        _upsert_ledger(ledger, c, "active", now_iso)
+    _save_ledger(ledger)
+    _export_final_ledger(ledger)
 
     state["containers"]   = active
     state["last_run_iso"] = now.isoformat()

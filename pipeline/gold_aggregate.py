@@ -167,6 +167,15 @@ def priority_score(row: pd.Series) -> int:
         if eta_days <= 3:  return 2
         return 1
 
+    # Safety net: action_status is the authoritative signal for urgency.
+    # Stage-based bands above should already cover Warning containers via
+    # IN_FREE_DAYS, but if stage and status ever disagree (missing/altered
+    # state enrichment, direct unit-test rows, etc.) a Warning container
+    # must still outrank a Safe one rather than silently collapsing to the
+    # same "background monitoring" score.
+    if status == "Warning":
+        return 4
+
     return 1  # GATE_IN and everything else
 
 
