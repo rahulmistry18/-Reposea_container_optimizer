@@ -5,92 +5,108 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>RepoSea — Fleet Map</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+:root{
+  --bg:#FAFAF9; --surface:#FFFFFF; --line:#E3E2DE; --line2:#EDECE8;
+  --ink:#181A1B; --ink-dim:#6E7275; --ink-faint:#A3A6A8;
+  --accent:#1F5C55; --accent-bg:#EAF1EF;
+  --critical:#AE3B26; --critical-bg:#F7EAE6;
+  --warning:#9C6B1F; --warning-bg:#F7F0E2;
+  --safe:#3E7A5B; --safe-bg:#EAF3EE;
+  --sans:'IBM Plex Sans',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{background:#071E2E;color:#E8F4F6;font-family:'JetBrains Mono',monospace;height:100%;overflow:hidden}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);height:100%;overflow:hidden;-webkit-font-smoothing:antialiased}
 #map{position:absolute;inset:0}
-.leaflet-container{background:#040F1A}
+.leaflet-container{background:#EEF0EE}
 
-/* ── Top bar ── */
-.bar{position:absolute;top:0;left:0;right:0;z-index:1000;height:48px;background:rgba(7,30,46,.96);border-bottom:1px solid rgba(232,244,246,.1);display:flex;align-items:center;gap:12px;padding:0 16px;backdrop-filter:blur(6px)}
-.logo{display:flex;align-items:center;gap:8px;text-decoration:none}
-.logo-box{width:26px;height:26px;background:#0A9396;border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-name{font-family:'EB Garamond',serif;font-size:16px;color:#E8F4F6}.logo-name span{color:#0A9396}
-.sep{width:1px;height:14px;background:rgba(232,244,246,.1)}
-.ptitle{font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(232,244,246,.32)}
-.bar-r{margin-left:auto;display:flex;align-items:center;gap:8px}
-.btn{font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;padding:4px 9px;border-radius:2px;border:1px solid rgba(232,244,246,.15);cursor:pointer;color:rgba(232,244,246,.4);background:transparent;text-decoration:none;transition:all .15s}
-.btn:hover{color:#C4E0E5;border-color:rgba(10,147,150,.5)}
-.btn.primary{color:#0A9396;border-color:rgba(10,147,150,.4);background:rgba(10,147,150,.1)}
-.dot{width:6px;height:6px;border-radius:50%;background:#0A9396;animation:pulse 2.5s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
-.ts{font-size:8.5px;color:rgba(232,244,246,.22)}
+/* Top bar */
+.bar{position:absolute;top:0;left:0;right:0;z-index:1000;height:52px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 20px}
+.logo{display:flex;align-items:baseline;gap:8px;text-decoration:none}
+.logo-name{font-size:17px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.logo-name span{color:var(--accent)}
+.nav{display:flex;gap:18px;margin-left:10px}
+.nav a{font-size:13px;color:var(--ink-dim);text-decoration:none;padding-bottom:2px;border-bottom:1.5px solid transparent}
+.nav a.act{color:var(--ink);border-color:var(--accent)}
+.nav a:hover{color:var(--ink)}
+.bar-r{margin-left:auto;display:flex;align-items:center;gap:12px}
+.btn{font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:6px 12px;cursor:pointer;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--ink-faint);background:var(--bg)}
+.ts{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
 
-/* ── KPI strip ── */
-.kpibar{position:absolute;top:48px;left:0;right:0;z-index:999;background:rgba(7,30,46,.94);border-bottom:1px solid rgba(232,244,246,.08);display:flex;padding:0 16px;backdrop-filter:blur(4px)}
-.kpi{display:flex;flex-direction:column;justify-content:center;padding:6px 13px;border-right:1px solid rgba(232,244,246,.08);min-width:105px;gap:2px}
+/* KPI strip */
+.kpibar{position:absolute;top:52px;left:0;right:0;z-index:999;background:var(--surface);border-bottom:1px solid var(--line);display:flex;padding:0 20px}
+.kpi{display:flex;flex-direction:column;justify-content:center;padding:9px 16px;border-right:1px solid var(--line2);min-width:100px;gap:2px}
 .kpi:last-child{border-right:none;margin-left:auto}
-.kl{font-size:7px;letter-spacing:.13em;text-transform:uppercase;color:rgba(232,244,246,.25)}
-.kv{font-family:'EB Garamond',serif;font-size:17px;font-weight:500;line-height:1;color:#E8F4F6}
-.kv.r{color:#E05252}.kv.a{color:#D4A030}.kv.t{color:#0A9396}.kv.o{color:#FF6B00}
-.ks{font-size:7px;color:rgba(232,244,246,.24)}
+.kl{font-size:10.5px;color:var(--ink-dim)}
+.kv{font-family:var(--mono);font-size:17px;font-weight:600;line-height:1.1;color:var(--ink)}
+.kv.r{color:var(--critical)}.kv.a{color:var(--warning)}.kv.t{color:var(--accent)}.kv.o{color:var(--warning)}
+.ks{font-size:10px;color:var(--ink-faint)}
 
-/* ── Legend ── */
-.legend{position:absolute;bottom:16px;left:16px;z-index:999;background:rgba(7,30,46,.93);border:1px solid rgba(232,244,246,.1);border-radius:3px;padding:10px 12px;min-width:170px}
-.ltitle{font-size:7.5px;letter-spacing:.13em;text-transform:uppercase;color:rgba(232,244,246,.25);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid rgba(232,244,246,.08)}
-.lr{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+/* Legend */
+.legend{position:absolute;bottom:16px;left:16px;z-index:999;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:175px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.ltitle{font-size:11px;font-weight:600;color:var(--ink-dim);margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--line2)}
+.lr{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .lr:last-child{margin-bottom:0}
-.lc{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.lsq{width:9px;height:9px;flex-shrink:0;border:1.5px solid rgba(232,244,246,.35)}
-.ll{font-size:8.5px;color:rgba(232,244,246,.5)}
-.lsep{border-top:1px solid rgba(232,244,246,.08);margin:5px 0}
+.lc{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.lsq{width:8px;height:8px;flex-shrink:0;border:1.5px solid var(--ink-faint)}
+.ll{font-size:12px;color:var(--ink-dim)}
+.lsep{border-top:1px solid var(--line2);margin:6px 0}
 
-/* ── Filter panel ── */
-.filters{position:absolute;bottom:16px;right:16px;z-index:999;background:rgba(7,30,46,.93);border:1px solid rgba(232,244,246,.1);border-radius:3px;padding:10px 12px;min-width:170px}
-.ftitle{font-size:7.5px;letter-spacing:.13em;text-transform:uppercase;color:rgba(232,244,246,.25);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid rgba(232,244,246,.08)}
-.fg{margin-bottom:7px}
+/* Filter panel */
+.filters{position:absolute;bottom:16px;right:16px;z-index:999;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:180px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.ftitle{font-size:11px;font-weight:600;color:var(--ink-dim);margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--line2)}
+.fg{margin-bottom:9px}
 .fg:last-child{margin-bottom:0}
-.fgl{font-size:7.5px;color:rgba(232,244,246,.26);letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px}
-.fbtns{display:flex;flex-wrap:wrap;gap:3px}
-.fb{font-size:7.5px;padding:2px 6px;border-radius:2px;border:1px solid rgba(232,244,246,.12);cursor:pointer;color:rgba(232,244,246,.38);background:transparent;transition:all .12s}
-.fb:hover{color:#C4E0E5}
-.fb.on{color:#0A9396;border-color:rgba(10,147,150,.4);background:rgba(10,147,150,.1)}
-.fb.on.r{color:#E05252;border-color:rgba(224,82,82,.4);background:rgba(224,82,82,.1)}
-.fb.on.a{color:#D4A030;border-color:rgba(212,160,48,.4);background:rgba(212,160,48,.1)}
+.fgl{font-size:10.5px;color:var(--ink-faint);margin-bottom:5px}
+.fbtns{display:flex;flex-wrap:wrap;gap:4px}
+.fb{font-family:var(--sans);font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid var(--line);cursor:pointer;color:var(--ink-dim);background:var(--surface);transition:all .12s}
+.fb:hover{color:var(--ink);border-color:var(--ink-faint)}
+.fb.on{color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
+.fb.on.r{color:var(--critical);border-color:var(--critical);background:var(--critical-bg)}
+.fb.on.a{color:var(--warning);border-color:var(--warning);background:var(--warning-bg)}
 
-/* ── Popups ── */
-.leaflet-popup-content-wrapper{background:rgba(7,30,46,.97)!important;border:1px solid rgba(232,244,246,.12)!important;border-radius:3px!important;box-shadow:0 4px 24px rgba(0,0,0,.5)!important;padding:0!important;color:#E8F4F6!important}
+/* Popups */
+.leaflet-popup-content-wrapper{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:8px!important;box-shadow:0 4px 20px rgba(0,0,0,.1)!important;padding:0!important;color:var(--ink)!important}
 .leaflet-popup-content{margin:0!important;padding:0!important}
-.leaflet-popup-tip-container{display:none}
-.leaflet-popup-close-button{color:rgba(232,244,246,.3)!important;font-size:15px!important;top:6px!important;right:8px!important}
-.leaflet-popup-close-button:hover{color:#E8F4F6!important}
-.popup{padding:12px 14px;min-width:210px}
-.pid{font-size:12px;font-weight:700;letter-spacing:.04em;margin-bottom:2px}
-.pvessel{font-size:9.5px;color:rgba(232,244,246,.4);margin-bottom:7px}
-.pstg{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:2px;font-size:7.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;border:1px solid;margin-bottom:8px}
-.pstg.AT_SEA{color:#0A9396;border-color:rgba(10,147,150,.4);background:rgba(10,147,150,.1)}
-.pstg.GATE_IN{color:#C4E0E5;border-color:rgba(232,244,246,.15);background:rgba(232,244,246,.05)}
-.pstg.ARRIVED{color:#64C8CC;border-color:rgba(100,200,204,.3);background:rgba(100,200,204,.08)}
-.pstg.IN_FREE_DAYS{color:#D4A030;border-color:rgba(212,160,48,.4);background:rgba(212,160,48,.1)}
-.pstg.OVERDUE{color:#E05252;border-color:rgba(224,82,82,.4);background:rgba(224,82,82,.1)}
-.prows{display:flex;flex-direction:column;gap:3px;border-top:1px solid rgba(232,244,246,.08);padding-top:7px}
+.leaflet-popup-tip{background:var(--surface)!important;border:1px solid var(--line)!important}
+.leaflet-popup-close-button{color:var(--ink-faint)!important;font-size:16px!important;top:8px!important;right:9px!important}
+.leaflet-popup-close-button:hover{color:var(--ink)!important}
+.popup{padding:14px 16px;min-width:220px;font-family:var(--sans)}
+.pid{font-family:var(--mono);font-size:14px;font-weight:600;margin-bottom:2px}
+.pvessel{font-size:12px;color:var(--ink-dim);margin-bottom:8px}
+.pstg{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;margin-bottom:9px}
+.pstg.AT_SEA{color:var(--accent);background:var(--accent-bg)}
+.pstg.GATE_IN{color:var(--ink-dim);background:var(--line2)}
+.pstg.ARRIVED{color:var(--accent);background:var(--accent-bg)}
+.pstg.IN_FREE_DAYS{color:var(--warning);background:var(--warning-bg)}
+.pstg.OVERDUE{color:var(--critical);background:var(--critical-bg)}
+.prows{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line2);padding-top:8px}
 .prow{display:flex;justify-content:space-between;gap:10px}
-.pk{font-size:7.5px;letter-spacing:.09em;text-transform:uppercase;color:rgba(232,244,246,.27)}
-.pv{font-size:9.5px;font-weight:500}
-.pv.r{color:#E05252}.pv.a{color:#D4A030}.pv.t{color:#0A9396}
-.pprog{border-top:1px solid rgba(232,244,246,.08);padding-top:7px;margin-top:2px}
-.pprog-lbl{font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;color:rgba(232,244,246,.27);margin-bottom:3px;display:flex;justify-content:space-between}
-.pprog-track{height:3px;background:rgba(232,244,246,.07);border-radius:2px;overflow:hidden}
+.pk{font-size:11px;color:var(--ink-faint)}
+.pv{font-family:var(--mono);font-size:12px}
+.pv.r{color:var(--critical)}.pv.a{color:var(--warning)}.pv.t{color:var(--accent)}
+.pprog{border-top:1px solid var(--line2);padding-top:8px;margin-top:3px}
+.pprog-lbl{font-size:11px;color:var(--ink-faint);margin-bottom:4px;display:flex;justify-content:space-between}
+.pprog-track{height:4px;background:var(--line2);border-radius:2px;overflow:hidden}
 .pprog-fill{height:100%;border-radius:2px}
+.ptrail-btn{margin-top:10px;width:100%;font-family:var(--sans);font-size:11.5px;padding:6px 0;border-radius:5px;border:1px solid var(--line);background:var(--surface);color:var(--accent);cursor:pointer}
+.ptrail-btn:hover{background:var(--accent-bg);border-color:var(--accent)}
+.ptrail-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 /* conflict popup */
-.cpopup{padding:12px 14px;min-width:200px;max-width:255px}
-.ctitle{font-size:11px;font-weight:700;margin-bottom:6px;letter-spacing:.02em}
-.crow{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(232,244,246,.06)}
+.cpopup{padding:14px 16px;min-width:210px;max-width:270px;font-family:var(--sans)}
+.ctitle{font-size:13px;font-weight:600;margin-bottom:8px}
+.crow{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line2)}
 .crow:last-of-type{border-bottom:none}
-.ck{font-size:8px;color:rgba(232,244,246,.42)}
-.cv{font-size:8px;font-weight:500}
-.cadv{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,107,0,.2);font-size:7.5px;color:rgba(232,244,246,.38);line-height:1.4}
+.ck{font-size:11px;color:var(--ink-dim)}
+.cv{font-size:11px;font-family:var(--mono)}
+.cadv{margin-top:8px;padding-top:8px;border-top:1px solid var(--warning-bg);font-size:11px;color:var(--ink-dim);line-height:1.5}
+
+@media (max-width:640px){
+  .bar{padding:0 14px}.nav{display:none}
+  .legend,.filters{min-width:150px;padding:10px 12px}
+}
 </style>
 </head>
 <body>
@@ -99,22 +115,15 @@ html,body{background:#071E2E;color:#E8F4F6;font-family:'JetBrains Mono',monospac
 <!-- Top bar -->
 <div class="bar">
   <a class="logo" href="./index.html">
-    <div class="logo-box">
-      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-        <path d="M2 13Q10 3 18 13" stroke="#E8F4F6" stroke-width="2.2" stroke-linecap="round"/>
-        <path d="M3 16Q10 8 17 16" stroke="#E8F4F6" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>
-        <circle cx="10" cy="13" r="2.4" fill="#E8F4F6"/>
-      </svg>
-    </div>
     <div class="logo-name">Repo<span>Sea</span></div>
   </a>
-  <div class="sep"></div>
-  <div class="ptitle">Fleet Geomap</div>
+  <div class="nav">
+    <a href="./index.html">Fleet</a>
+    <a href="./map.html" class="act">Map</a>
+  </div>
   <div class="bar-r">
-    <div class="dot"></div>
     <div class="ts" id="ts-label">—</div>
-    <button class="btn primary" onclick="doRefresh()">⟳ Refresh</button>
-    <a class="btn" href="./index.html">← Dashboard</a>
+    <button class="btn" onclick="doRefresh()">Refresh</button>
   </div>
 </div>
 
@@ -124,17 +133,17 @@ html,body{background:#071E2E;color:#E8F4F6;font-family:'JetBrains Mono',monospac
 <!-- Legend -->
 <div class="legend">
   <div class="ltitle">Legend</div>
-  <div class="lr"><div class="lc" style="background:#E05252"></div><div class="ll">Critical — penalty accruing</div></div>
-  <div class="lr"><div class="lc" style="background:#D4A030"></div><div class="ll">Warning — ≤ 2 days left</div></div>
-  <div class="lr"><div class="lc" style="background:#0A9396"></div><div class="ll">Safe — en route</div></div>
-  <div class="lr"><div class="lc" style="background:#64C8CC"></div><div class="ll">Arrived / at terminal</div></div>
+  <div class="lr"><div class="lc" style="background:var(--critical)"></div><div class="ll">Critical — penalty accruing</div></div>
+  <div class="lr"><div class="lc" style="background:var(--warning)"></div><div class="ll">Warning — ≤ 2 days left</div></div>
+  <div class="lr"><div class="lc" style="background:var(--accent)"></div><div class="ll">Safe — en route</div></div>
   <div class="lsep"></div>
-  <div class="lr"><div style="width:20px;height:1.5px;background:rgba(10,147,150,.5);flex-shrink:0"></div><div class="ll">Trade lane route</div></div>
+  <div class="lr"><div style="width:20px;height:1.5px;background:var(--ink-faint);flex-shrink:0"></div><div class="ll">Trade lane route</div></div>
   <div class="lr"><div class="lsq"></div><div class="ll">Port / terminal</div></div>
+  <div class="lr"><div style="width:20px;height:2px;background:var(--accent);flex-shrink:0;border-top:2px dashed var(--accent)"></div><div class="ll">Container trail (click a dot)</div></div>
   <div class="lsep"></div>
   <div class="lr">
-    <svg width="11" height="11" viewBox="0 0 11 11" style="flex-shrink:0"><polygon points="5.5,1 10,10 1,10" fill="#FF6B00"/></svg>
-    <div class="ll" style="color:#FF6B00">Conflict zone (click for intel)</div>
+    <svg width="11" height="11" viewBox="0 0 11 11" style="flex-shrink:0"><polygon points="5.5,1 10,10 1,10" fill="var(--warning)"/></svg>
+    <div class="ll">Conflict zone (click for intel)</div>
   </div>
 </div>
 
@@ -169,6 +178,7 @@ html,body{background:#071E2E;color:#E8F4F6;font-family:'JetBrains Mono',monospac
     </div>
   </div>
 </div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
@@ -254,7 +264,7 @@ function routePos(route, t) {
 // ══ Geopolitical conflict zones — April 2026 ═════════════════════════════
 const CONFLICTS = [
   {
-    name: 'Strait of Hormuz', lat: 26.57, lon: 56.45, sev: 'HIGH', color: '#FF6B00',
+    name: 'Strait of Hormuz', lat: 26.57, lon: 56.45, sev: 'HIGH', color: '#9C6B1F',
     rows: [
       ['Severity','HIGH'], ['Status','Transit restrictions active'],
       ['Insurance','+400% war risk premium'], ['Delay','3–7 days per transit'],
@@ -263,7 +273,7 @@ const CONFLICTS = [
     advisory: 'UKMTO advises 60 nm exclusion zone. Most carriers requesting armed naval escorts.',
   },
   {
-    name: 'Red Sea / Bab-el-Mandeb', lat: 12.58, lon: 43.32, sev: 'CRITICAL', color: '#E03030',
+    name: 'Red Sea / Bab-el-Mandeb', lat: 12.58, lon: 43.32, sev: 'CRITICAL', color: '#AE3B26',
     rows: [
       ['Severity','CRITICAL'], ['Status','Active Houthi interdiction'],
       ['Insurance','+400% war risk premium'], ['Delay','10–14 days (Cape reroute)'],
@@ -274,7 +284,7 @@ const CONFLICTS = [
 ];
 
 // ══ Status colours ═══════════════════════════════════════════════════════
-const SC = { Critical:'#E05252', Warning:'#D4A030', Safe:'#0A9396' };
+const SC = { Critical:'#AE3B26', Warning:'#9C6B1F', Safe:'#1F5C55' };
 const SL = { GATE_IN:'Gate-In', AT_SEA:'At Sea', ARRIVED:'Arrived', IN_FREE_DAYS:'Free Days', OVERDUE:'Overdue' };
 
 // ══ Map setup ════════════════════════════════════════════════════════════
@@ -282,18 +292,73 @@ const map = L.map('map', {
   center: [20, 15], zoom: 2, minZoom: 2, maxZoom: 9,
   zoomControl: false, attributionControl: false,
 });
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
   { maxZoom:19, subdomains:'abcd' }).addTo(map);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
-  { maxZoom:19, subdomains:'abcd', opacity:0.32 }).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+  { maxZoom:19, subdomains:'abcd', opacity:0.65 }).addTo(map);
 L.control.zoom({ position:'topright' }).addTo(map);
 
 // ══ State ════════════════════════════════════════════════════════════════
 let DATA = [];
+let HISTORY = {};
 let layers = [];
+let trailLayers = [];
+let activeTrailId = null;
 const fStatus = new Set(['Critical','Warning','Safe']);
 const fStage  = new Set(['GATE_IN','AT_SEA','ARRIVED','IN_FREE_DAYS','OVERDUE']);
 const fLane   = new Set(['TRANS_PAC','TRANS_ATL','ASIA_EUR','INTRA_ASIA']);
+
+// ══ Trails — draw a container's historical lat/lon path ═══════════════════
+function clearTrail() {
+  trailLayers.forEach(l => map.removeLayer(l));
+  trailLayers = [];
+}
+
+function drawTrail(cid) {
+  clearTrail();
+  const snaps = (HISTORY[cid] || []).filter(s =>
+    (Math.abs(s.lat) > 0.05 || Math.abs(s.lon) > 0.05)
+  );
+  if (snaps.length < 2) return false;
+
+  const latlngs = snaps.map(s => [s.lat, s.lon]);
+  trailLayers.push(
+    L.polyline(latlngs, { color: '#1F5C55', weight: 2, opacity: 0.6, dashArray: '2,7' }).addTo(map)
+  );
+  snaps.forEach((s, i) => {
+    const isLast = i === snaps.length - 1;
+    trailLayers.push(
+      L.circleMarker([s.lat, s.lon], {
+        radius: isLast ? 5 : 3,
+        color: SC[s.status] || '#1F5C55',
+        fillColor: SC[s.status] || '#1F5C55',
+        fillOpacity: 0.9,
+        weight: isLast ? 2 : 1,
+      })
+      .bindTooltip(`${s.ts} · ${SL[s.stage] || s.stage}`, { direction: 'top', offset: [0, -4] })
+      .addTo(map)
+    );
+  });
+  return latlngs;
+}
+
+function toggleTrail(cid) {
+  let latlngs = null;
+  if (activeTrailId === cid) {
+    clearTrail();
+    activeTrailId = null;
+  } else {
+    latlngs = drawTrail(cid);
+    activeTrailId = latlngs ? cid : null;
+  }
+  // refresh the open popup's button state
+  document.querySelectorAll('.ptrail-btn').forEach(b => {
+    b.classList.toggle('on', b.dataset.cid === activeTrailId);
+    b.textContent = b.dataset.cid === activeTrailId ? '● Hide trail' : '○ Show trail';
+  });
+  return latlngs;
+}
+window.toggleTrail = toggleTrail;
 
 // ══ Icon factories ════════════════════════════════════════════════════════
 function containerDot(color, radius, pulsing) {
@@ -330,10 +395,12 @@ function containerPopup(d) {
   const dtl   = Number(d.days_to_lfd || 0);
   const dc    = dtl <= 0 ? 'r' : dtl <= 2 ? 'a' : 't';
   const pct   = Number(d.voyage_pct || 0);
-  const pc    = pct >= 80 ? '#E05252' : pct >= 50 ? '#D4A030' : '#0A9396';
+  const pc    = pct >= 80 ? '#AE3B26' : pct >= 50 ? '#9C6B1F' : '#1F5C55';
   const burn  = Number(d.burn_rate_usd || 0);
   const proj  = Number(d.projected_exposure_7d_usd || 0);
   const vessel = d.vessel_name || '—';
+  const hasHistory = (HISTORY[d.container_id] || []).length >= 2;
+  const isOn = activeTrailId === d.container_id;
   return `<div class="popup">
     <div class="pid">${d.container_id}</div>
     <div class="pvessel">${vessel}</div>
@@ -341,19 +408,23 @@ function containerPopup(d) {
     <div class="prows">
       <div class="prow"><div class="pk">Route</div><div class="pv">${d.origin_locode} → ${d.dest_locode}</div></div>
       <div class="prow"><div class="pk">Lane</div><div class="pv">${d.trade_lane_label || d.trade_lane}</div></div>
-      <div class="prow"><div class="pk">Lease</div><div class="pv">${d.lease_type}</div></div>
+      <div class="prow"><div class="pk">Contract</div><div class="pv">${d.lease_type}</div></div>
       <div class="prow"><div class="pk">Buffer</div><div class="pv ${dc}">${dtl >= 0 ? '+' : ''}${dtl.toFixed(1)}d</div></div>
       <div class="prow"><div class="pk">Exposure</div><div class="pv ${dtl<=0?'r':''}">
         ${dtl <= 0 ? '$'+Math.round(burn).toLocaleString()+' accrued' : '$'+d.per_diem_rate+'/day'}
       </div></div>
       <div class="prow"><div class="pk">7d Forecast</div><div class="pv a">$${Math.round(proj).toLocaleString()}</div></div>
-      <div class="prow"><div class="pk">Strategy</div><div class="pv t" style="font-size:8.5px">${d.repo_strategy || '—'}</div></div>
-      <div class="prow"><div class="pk">Priority</div><div class="pv" style="color:${d.priority_score>=9?'#E05252':d.priority_score>=7?'#D4A030':'#0A9396'}">${d.priority_score || 1}/10</div></div>
+      <div class="prow"><div class="pk">Strategy</div><div class="pv t" style="font-size:11px">${d.repo_strategy || '—'}</div></div>
+      <div class="prow"><div class="pk">Priority</div><div class="pv" style="color:${d.priority_score>=9?'#AE3B26':d.priority_score>=7?'#9C6B1F':'#1F5C55'}">${d.priority_score || 1}/10</div></div>
     </div>
     <div class="pprog">
       <div class="pprog-lbl"><span>Voyage progress</span><span>${pct}%</span></div>
       <div class="pprog-track"><div class="pprog-fill" style="width:${pct}%;background:${pc}"></div></div>
     </div>
+    ${hasHistory
+      ? `<button class="ptrail-btn ${isOn ? 'on' : ''}" data-cid="${d.container_id}" onclick="toggleTrail('${d.container_id}')">${isOn ? '● Hide trail' : '○ Show trail'}</button>`
+      : `<div style="margin-top:10px;font-size:10.5px;color:var(--ink-faint)">Trail builds up as the pipeline runs</div>`
+    }
   </div>`;
 }
 
@@ -393,9 +464,9 @@ function render() {
     // ── Route arc — single clean polyline, no dots, no dashes ────────────
     if (route && route.length >= 2) {
       const line = L.polyline(route, {
-        color:   d.action_status === 'Critical' ? '#E05252'
-               : d.action_status === 'Warning'  ? '#D4A030'
-               : 'rgba(10,147,150,0.45)',
+        color:   d.action_status === 'Critical' ? '#AE3B26'
+               : d.action_status === 'Warning'  ? '#9C6B1F'
+               : 'rgba(31,92,85,0.45)',
         weight:  1.2,
         opacity: d.action_status === 'Critical' ? 0.65 : 0.38,
       }).addTo(map);
@@ -464,6 +535,17 @@ function render() {
   });
 
   renderKPIs(visible);
+
+  // Re-draw the active trail after clearing/rebuilding layers, since a
+  // filter change or refresh would otherwise silently drop it.
+  if (activeTrailId) {
+    if (visible.some(d => d.container_id === activeTrailId)) {
+      drawTrail(activeTrailId);
+    } else {
+      clearTrail();
+      activeTrailId = null;
+    }
+  }
 }
 
 function renderKPIs(visible) {
@@ -515,28 +597,66 @@ const FALLBACK = [
 
 async function loadData() {
   try {
-    const [cr, sr] = await Promise.all([
+    const [cr, sr, hr] = await Promise.all([
       fetch('./data/gold/containers.json?t=' + Date.now()),
       fetch('./data/gold/summary.json?t='    + Date.now()),
+      fetch('./data/gold/history.json?t='    + Date.now()),
     ]);
     DATA = await cr.json();
     const sum = await sr.json();
+    try { const hd = await hr.json(); HISTORY = hd.snapshots || {}; } catch (e) { HISTORY = {}; }
     document.getElementById('ts-label').textContent =
       'Run #' + (sum.run_count || '?') + ' · ' +
       (sum.generated_at || '').slice(0, 16).replace('T', ' ') + ' UTC';
   } catch(e) {
     DATA = FALLBACK;
+    HISTORY = {};
     document.getElementById('ts-label').textContent = 'Offline · sample data';
   }
   render();
+  focusFromQueryParam();
+}
+
+// If a container is named in the URL (?container=ID), e.g. via a "Track
+// trail on map" link from the dashboard, center on it, open its popup,
+// and draw its trail automatically.
+let queryFocusHandled = false;
+function focusFromQueryParam() {
+  if (queryFocusHandled) return;
+  const params = new URLSearchParams(window.location.search);
+  const cid = params.get('container');
+  if (!cid) return;
+  const d = DATA.find(x => x.container_id === cid);
+  if (!d) return;
+  queryFocusHandled = true;
+
+  // Make sure it's visible regardless of current filter state
+  fStatus.add(d.action_status);
+  fStage.add(d.lifecycle_stage);
+  fLane.add(d.trade_lane);
+  document.querySelectorAll('.fb').forEach(btn => {
+    const f = btn.dataset.f, v = btn.dataset.v;
+    const set = f === 'status' ? fStatus : f === 'stage' ? fStage : fLane;
+    btn.classList.toggle('on', set.has(v));
+  });
+  render();
+
+  const lat = Number(d.current_lat || 0), lon = Number(d.current_lon || 0);
+  const trailBounds = toggleTrail(cid);
+  if (trailBounds && trailBounds.length >= 2) {
+    map.fitBounds(trailBounds, { padding: [80, 80] });
+  } else if (Math.abs(lat) > 0.05 || Math.abs(lon) > 0.05) {
+    map.setView([lat, lon], 4);
+  }
 }
 
 async function doRefresh() {
-  const btn = document.querySelector('.btn.primary');
-  btn.textContent = '⟳ Loading…'; btn.style.opacity = '0.5';
+  const btn = document.querySelector('.bar-r .btn');
+  const original = btn.textContent;
+  btn.textContent = 'Refreshing…'; btn.disabled = true;
   await loadData();
-  btn.textContent = '✓ Done';
-  setTimeout(() => { btn.textContent = '⟳ Refresh'; btn.style.opacity = '1'; }, 1800);
+  btn.textContent = 'Done'; btn.disabled = false;
+  setTimeout(() => { btn.textContent = original; }, 1500);
 }
 
 loadData();

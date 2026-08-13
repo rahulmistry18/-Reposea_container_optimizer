@@ -80,6 +80,7 @@ tbody td{padding:10px 14px;font-size:13px;color:var(--ink);white-space:nowrap}
 .id{font-family:var(--mono);font-weight:600}
 .dim{color:var(--ink-dim)}
 .route{color:var(--ink-dim);font-size:12.5px}
+.contract{display:inline-block;font-size:11px;padding:2px 7px;border-radius:4px;background:var(--accent-bg);color:var(--accent);white-space:nowrap}
 .days{font-family:var(--mono)}
 .days.over{color:var(--critical)}
 .days.soon{color:var(--warning)}
@@ -177,6 +178,7 @@ tbody td{padding:10px 14px;font-size:13px;color:var(--ink);white-space:nowrap}
         <thead>
           <tr>
             <th data-col="container_id">Container</th>
+            <th data-col="lease_type">Contract</th>
             <th data-col="trade_lane">Lane</th>
             <th data-col="lifecycle_stage">Stage</th>
             <th data-col="vessel_name">Vessel → Dest</th>
@@ -212,6 +214,7 @@ tbody td{padding:10px 14px;font-size:13px;color:var(--ink);white-space:nowrap}
   </div>
   <div class="panel-body">
     <div class="meta-grid" id="p-meta"></div>
+    <a class="btn" id="p-map-link" style="display:inline-block;margin-bottom:20px;text-decoration:none" href="#">Track trail on map →</a>
     <div class="hist-title">Recent history</div>
     <div id="p-hist"></div>
   </div>
@@ -312,6 +315,7 @@ function renderTable() {
   document.getElementById('tbody').innerHTML = rows.map(d => `
     <tr onclick="openDetail('${d.container_id}')">
       <td class="id">${d.container_id || '—'}</td>
+      <td><span class="contract">${d.lease_type || '—'}</span></td>
       <td class="dim">${LANE_LABEL[d.trade_lane] || d.trade_lane || '—'}</td>
       <td class="dim">${STAGE_LABEL[d.lifecycle_stage] || d.lifecycle_stage || '—'}</td>
       <td class="route">${d.vessel_name || '—'} → ${d.dest_locode || '—'}</td>
@@ -351,8 +355,10 @@ function openDetail(cid) {
   document.getElementById('p-sub').textContent = (d.vessel_name || 'Unassigned') + ' · ' + (LANE_LABEL[d.trade_lane] || d.trade_lane || '—');
 
   const meta = [
+    ['Contract ID', d.contract_id || '—'],
     ['Route', (d.origin_locode || '?') + ' → ' + (d.dest_locode || '?')],
     ['Lease type', d.lease_type || '—'],
+    ['Vessel IMO', d.imo_number || '—'],
     ['Stage', STAGE_LABEL[d.lifecycle_stage] || d.lifecycle_stage || '—'],
     ['Status', d.action_status || '—'],
     ['Days to LFD', (Number(d.days_to_lfd||0) >= 0 ? '+' : '') + Number(d.days_to_lfd||0).toFixed(1)],
@@ -364,6 +370,7 @@ function openDetail(cid) {
   ];
   document.getElementById('p-meta').innerHTML = meta.map(([l, v]) =>
     `<div class="meta-item"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
+  document.getElementById('p-map-link').href = './map.html?container=' + encodeURIComponent(cid);
 
   const snaps = (H[cid] || []).slice().reverse().slice(0, 12);
   document.getElementById('p-hist').innerHTML = snaps.length
