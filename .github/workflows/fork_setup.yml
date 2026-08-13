@@ -123,11 +123,8 @@ jobs:
           git add data/gold/ data/exports/ dashboard/ docs/ README.md
           git add data/state/container_history.json 2>/dev/null || true
           git add data/state/alerts_sent.json 2>/dev/null || true
-<<<<<<< HEAD
           git add data/state/container_ledger.json 2>/dev/null || true
           git add data/state/completed_containers.json 2>/dev/null || true
-=======
->>>>>>> 76e956aa78553138a7a7899222941f804c3e6f72
           if git diff --cached --quiet; then
             echo "Nothing to commit"
           else
