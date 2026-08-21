@@ -1,0 +1,85 @@
+name: RepoSea — Weekly ML Retrain
+
+# The ETA-deviation model doesn't need retraining every hour — the
+# distribution it's learning barely moves within a week. This runs
+# separately from the hourly pipeline so a slow model-refresh cadence
+# doesn't get bundled into (and doesn't slow down) the fast data cycle.
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"   # 04:00 UTC every Monday
+
+  workflow_dispatch:
+    inputs:
+      rows:
+        description: "Number of synthetic training voyages to generate"
+        required: false
+        default: "4000"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reposea-git-write-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  retrain:
+    name: "Regenerate training data + retrain XGBoost"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r ml/requirements-ml.txt
+
+      - name: Generate training data
+        run: python -m ml.generate_training_data --rows ${{ inputs.rows || '4000' }}
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Train ETA deviation model
+        run: python -m ml.train_eta_model
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Show metrics
+        run: cat ml/model_metrics.json
+
+      - name: Commit updated model + metrics
+        run: |
+          git config user.name  "RepoSea Bot"
+          git config user.email "pipeline@reposea.bot"
+          git add ml/eta_deviation_model.json ml/model_metrics.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(ml): weekly ETA model retrain $(date -u +'%Y-%m-%dT%H:%M:%SZ') [skip ci]"
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "Push attempt $i failed — retrying after rebase..."
+              sleep $((i * 5))
+            done
+          fi
+
+      - name: Upload model artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eta-model-${{ github.run_number }}
+          path: |
+            ml/model_metrics.json
+            ml/eta_deviation_model.json
+          retention-days: 90

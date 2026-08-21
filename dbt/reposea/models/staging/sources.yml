@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: reposea_gold
+    description: >
+      Gold-layer tables loaded into BigQuery by warehouse/bigquery_load.py
+      from the pipeline's data/gold/ output. Only used when running with
+      `--target prod`; the `dev` target reads the committed seed instead.
+    database: "{{ env_var('BQ_PROJECT_ID', 'reposea-demo') }}"
+    schema: reposea_gold
+    tables:
+      - name: containers
+        description: One row per active container, refreshed each pipeline run.
+      - name: summary
+        description: Fleet-level KPI aggregates for the current run.

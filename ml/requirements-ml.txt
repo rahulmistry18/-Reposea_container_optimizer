@@ -1,0 +1,8 @@
+# RepoSea — ML layer dependencies (ETA deviation model)
+# Kept separate from the core pipeline's requirements.txt so the hourly
+# GitHub Actions pipeline doesn't have to install xgboost/sklearn on every run.
+
+xgboost>=2.0.0
+scikit-learn>=1.4.0
+pandas>=2.2.0
+numpy>=1.26.0

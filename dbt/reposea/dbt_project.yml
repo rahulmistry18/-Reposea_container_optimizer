@@ -1,0 +1,33 @@
+name: 'reposea'
+version: '1.0.0'
+config-version: 2
+
+profile: 'reposea'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  reposea:
+    staging:
+      +materialized: view
+      +schema: staging
+    marts:
+      +materialized: table
+      +schema: marts
+
+seeds:
+  reposea:
+    +schema: seed_data
+    gold_containers_seed:
+      +column_types:
+        eta_parsed: timestamp
+        lfd_parsed: timestamp
+        pipeline_run_ts: timestamp

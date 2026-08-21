@@ -44,9 +44,10 @@ jobs:
     timeout-minutes: 20
 
     outputs:
-      critical_count: ${{ steps.summary.outputs.critical_count }}
-      total_exposure: ${{ steps.summary.outputs.total_exposure }}
-      run_ts:         ${{ steps.summary.outputs.run_ts }}
+      critical_count:   ${{ steps.summary.outputs.critical_count }}
+      total_exposure:   ${{ steps.summary.outputs.total_exposure }}
+      run_ts:           ${{ steps.summary.outputs.run_ts }}
+      dbt_docs_enabled: ${{ steps.check_gcp.outputs.enabled }}
 
     steps:
       - uses: actions/checkout@v4
@@ -95,6 +96,89 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
 
+      - name: Generate DA narrative
+        run: python -m analysis.generate_narrative
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      # ── Optional warehouse layer (BigQuery + dbt) ───────────────────────────
+      # Runs automatically once GCP_SA_KEY_B64 + BQ_PROJECT_ID secrets are set
+      # (Settings -> Secrets and variables -> Actions). Until then, this whole
+      # block is skipped and the run behaves exactly as it does today — same
+      # "degrades gracefully" pattern the SMTP alert secrets already use.
+      - name: Check optional warehouse secrets
+        id: check_gcp
+        run: |
+          if [ -n "$GCP_SA_KEY_B64" ] && [ -n "$BQ_PROJECT_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GCP_SA_KEY_B64: ${{ secrets.GCP_SA_KEY_B64 }}
+          BQ_PROJECT_ID: ${{ secrets.BQ_PROJECT_ID }}
+
+      - name: Decode GCP service account key
+        if: steps.check_gcp.outputs.enabled == 'true'
+        run: echo "$GCP_SA_KEY_B64" | base64 -d > /tmp/gcp-key.json
+        env:
+          GCP_SA_KEY_B64: ${{ secrets.GCP_SA_KEY_B64 }}
+
+      - name: Install warehouse + dbt dependencies
+        if: steps.check_gcp.outputs.enabled == 'true'
+        run: |
+          pip install -r warehouse/requirements-warehouse.txt
+          pip install dbt-core dbt-bigquery
+
+      - name: Load Gold data to BigQuery
+        if: steps.check_gcp.outputs.enabled == 'true'
+        run: >
+          python -m warehouse.bigquery_load
+          --project "$BQ_PROJECT_ID" --snapshot-history
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
+          BQ_PROJECT_ID: ${{ secrets.BQ_PROJECT_ID }}
+
+      - name: dbt build (staging + marts + tests)
+        if: steps.check_gcp.outputs.enabled == 'true'
+        working-directory: dbt/reposea
+        run: dbt build --target prod
+        env:
+          DBT_PROFILES_DIR: ${{ github.workspace }}/dbt/reposea
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
+          BQ_PROJECT_ID: ${{ secrets.BQ_PROJECT_ID }}
+
+      - name: dbt docs generate
+        if: steps.check_gcp.outputs.enabled == 'true'
+        working-directory: dbt/reposea
+        run: dbt docs generate --target prod
+        env:
+          DBT_PROFILES_DIR: ${{ github.workspace }}/dbt/reposea
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
+          BQ_PROJECT_ID: ${{ secrets.BQ_PROJECT_ID }}
+
+      - name: Stage dbt docs for Pages
+        if: steps.check_gcp.outputs.enabled == 'true'
+        run: |
+          mkdir -p dbt-docs-site
+          cp dbt/reposea/target/index.html      dbt-docs-site/ 2>/dev/null || true
+          cp dbt/reposea/target/manifest.json   dbt-docs-site/ 2>/dev/null || true
+          cp dbt/reposea/target/catalog.json    dbt-docs-site/ 2>/dev/null || true
+          cp dbt/reposea/target/run_results.json dbt-docs-site/ 2>/dev/null || true
+
+      - name: Upload dbt docs artifact
+        if: steps.check_gcp.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-docs
+          path: dbt-docs-site/
+          retention-days: 30
+
+      - name: Clean up GCP key
+        if: always() && steps.check_gcp.outputs.enabled == 'true'
+        run: rm -f /tmp/gcp-key.json
+
       - name: Validate Gold outputs
         id: summary
         run: |
@@ -124,6 +208,7 @@ jobs:
           git config user.email "pipeline@reposea.bot"
           git add data/gold/
           git add data/exports/reposea_report.xlsx || true
+          git add analysis/LANE_RELIABILITY_NARRATIVE.md || true
           git add data/state/container_history.json || true
           git add data/state/alerts_sent.json || true
           git add data/state/container_ledger.json || true
@@ -177,6 +262,15 @@ jobs:
           [ -f data/exports/reposea_report.xlsx ] && cp data/exports/reposea_report.xlsx _site/data/exports/ || true
           echo "Bundle: $(du -sh _site | cut -f1)"
           ls -lh _site/data/gold/
+
+      # Only present when the warehouse-layer secrets are set (see Step 6 of
+      # docs/SETUP_GUIDE.html) — publishes at /dbt-docs/ alongside the dashboard.
+      - name: Download dbt docs (if built)
+        if: needs.pipeline.outputs.dbt_docs_enabled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: dbt-docs
+          path: _site/dbt-docs
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

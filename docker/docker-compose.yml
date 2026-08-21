@@ -1,0 +1,48 @@
+# Local orchestration sandbox for RepoSea.
+#
+#   docker compose -f docker/docker-compose.yml up pipeline
+#       -> runs one full Bronze -> Silver -> Gold -> Excel pass in a container
+#
+#   docker compose -f docker/docker-compose.yml up airflow
+#       -> standalone Airflow (webserver+scheduler in one process) at
+#          http://localhost:8080 (admin/admin), pre-loaded with
+#          airflow/dags/reposea_medallion_dag.py, so the Airflow requirement
+#          can be demoed locally without standing up Cloud Composer.
+#
+# Both share the repo root as a volume so pipeline code edits are picked up
+# without rebuilding the image.
+
+services:
+  pipeline:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ../data:/app/data
+    environment:
+      - PYTHONPATH=/app
+
+  airflow:
+    image: apache/airflow:2.9.3-python3.11
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username admin --password admin
+                 --firstname Rahul --lastname Mistari --role Admin --email admin@example.com || true &&
+               airflow standalone"
+    ports:
+      - "8080:8080"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+      - PYTHONPATH=/opt/reposea
+      - GOOGLE_APPLICATION_CREDENTIALS=/opt/airflow/secrets/gcp_key.json
+      - BQ_PROJECT_ID=${BQ_PROJECT_ID:-reposea-demo}
+    volumes:
+      - ../airflow/dags:/opt/airflow/dags
+      - ../:/opt/reposea
+      - ./secrets:/opt/airflow/secrets:ro
+      - airflow_db:/opt/airflow
+
+volumes:
+  airflow_db:

@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: mart_lane_performance
+    description: One row per trade lane — reliability and cost-exposure rollup.
+    columns:
+      - name: trade_lane
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('trade_lane_dim')
+              field: trade_lane
+      - name: container_count
+        tests:
+          - not_null
+      - name: pct_critical
+        tests:
+          - not_null
+
+  - name: mart_container_status
+    description: Container-grain triage list ranked by priority score.
+    columns:
+      - name: container_id
+        tests:
+          - not_null
+          - unique
+      - name: trade_lane
+        tests:
+          - relationships:
+              to: ref('trade_lane_dim')
+              field: trade_lane
+      - name: action_status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Critical", "Warning", "Safe"]
+
+seeds:
+  - name: trade_lane_dim
+    description: Static trade lane dimension — region pairs for the four RepoSea lanes.
+    columns:
+      - name: trade_lane
+        tests:
+          - not_null
+          - unique

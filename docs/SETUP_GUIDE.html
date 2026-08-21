@@ -454,7 +454,7 @@ const STEPS = [
   phaseSub: "Get the pipeline running on GitHub in under 10 minutes.",
   phaseTime: "~10 min total",
   title: "Create Your GitHub Repository",
-  badge: "Step 1 of 10",
+  badge: "Step 1 of 11",
   content: `
     <div class="callout info"><div class="callout-icon">ℹ️</div><div>You need a free GitHub account. Go to <strong>github.com</strong> and sign up if you don't have one yet.</div></div>
 
@@ -501,7 +501,7 @@ const STEPS = [
 // ── STEP 1 ──────────────────────────────────────────────────
 {
   title: "Upload Your Project Files",
-  badge: "Step 2 of 10",
+  badge: "Step 2 of 11",
   content: `
     <div class="callout warn"><div class="callout-icon">📦</div><div>Make sure you have downloaded the <strong>container-optimizer-v2.zip</strong> file from the previous chat message and unzipped it on your computer.</div></div>
 
@@ -541,7 +541,7 @@ git push -u origin main</span></div>
 // ── STEP 2 ──────────────────────────────────────────────────
 {
   title: "Set Workflow Permissions",
-  badge: "Step 3 of 10",
+  badge: "Step 3 of 11",
   content: `
     <div class="callout warn"><div class="callout-icon">⚠️</div><div>By default, GitHub Actions can't write back to your repo. You must enable this or the pipeline can't commit the hourly Gold data.</div></div>
 
@@ -594,7 +594,7 @@ git push -u origin main</span></div>
 // ── STEP 3 ──────────────────────────────────────────────────
 {
   title: "Enable GitHub Pages",
-  badge: "Step 4 of 10",
+  badge: "Step 4 of 11",
   content: `
     <div class="callout info"><div class="callout-icon">🌐</div><div>GitHub Pages turns your repo into a public website — completely free. This is where the live dashboard will be hosted.</div></div>
 
@@ -637,7 +637,7 @@ git push -u origin main</span></div>
 // ── STEP 4 ──────────────────────────────────────────────────
 {
   title: "Trigger the First Pipeline Run",
-  badge: "Step 5 of 10",
+  badge: "Step 5 of 11",
   content: `
     <div class="callout info"><div class="callout-icon">⚡</div><div>The hourly cron won't fire until the next top-of-the-hour. We trigger it manually right now to get everything running immediately.</div></div>
 
@@ -695,12 +695,62 @@ git push -u origin main</span></div>
 
 // ── STEP 5 ──────────────────────────────────────────────────
 {
-  phase: "Phase 2 — Power BI Setup",
+  phase: "Phase 2 — Automate the Warehouse Layer (Optional)",
+  phaseIcon: "🏭",
+  phaseSub: "Wire BigQuery + dbt into the same hourly run — skip this phase and everything above still works exactly as before.",
+  phaseTime: "~8 min total",
+  title: "Set Up BigQuery + dbt (Optional)",
+  badge: "Step 6 of 11",
+  content: `
+    <div class="callout info"><div class="callout-icon">ℹ️</div><div>This step is <strong>entirely optional</strong>. Skip it and your dashboard, Excel export, and Power BI connection all keep working exactly as they do today — this only adds a BigQuery copy of the Gold data and a public dbt docs site alongside it.</div></div>
+
+    <div class="instr">
+      <div class="instr-num">1</div>
+      <div class="instr-body">
+        <div class="instr-text">Create a free-tier GCP project (or reuse one) and a service account with the <strong>BigQuery Data Editor</strong> + <strong>BigQuery Job User</strong> roles. Download its JSON key.</div>
+      </div>
+    </div>
+
+    <div class="instr">
+      <div class="instr-num">2</div>
+      <div class="instr-body">
+        <div class="instr-text">Base64-encode the key file so it can safely live in a GitHub Secret:</div>
+        <div class="code"><div class="cp">RUN LOCALLY</div><span class="url">base64 -i your-key.json | pbcopy</span>   <span class="cmt">← macOS, copies to clipboard</span>
+<span class="url">base64 -w0 your-key.json</span>          <span class="cmt">← Linux, prints to terminal — copy the output</span></div>
+      </div>
+    </div>
+
+    <div class="instr">
+      <div class="instr-num">3</div>
+      <div class="instr-body">
+        <div class="instr-text">In your repo: <strong>Settings → Secrets and variables → Actions → New repository secret</strong>. Add these two:</div>
+        <div class="ui-mock">
+          <div class="ui-path">Settings › Secrets and variables › Actions</div>
+          <div class="ui-row highlight"><div class="ui-label"><strong>GCP_SA_KEY_B64</strong></div><div class="ui-ctrl">← the base64 string from step 2</div></div>
+          <div class="ui-row highlight"><div class="ui-label"><strong>BQ_PROJECT_ID</strong></div><div class="ui-ctrl">← your GCP project ID</div></div>
+        </div>
+        <div class="callout good"><div class="callout-icon">✅</div><div>Both secrets set? The next pipeline run automatically loads Gold data into BigQuery and publishes dbt docs. Neither secret set? The pipeline detects that and skips both steps — the run still succeeds, same as how missing SMTP secrets just puts alerts in dry-run mode.</div></div>
+      </div>
+    </div>
+
+    <div class="instr">
+      <div class="instr-num">4</div>
+      <div class="instr-body">
+        <div class="instr-text">After your next hourly run, your dbt docs are public at:</div>
+        <div class="code"><div class="cp">YOUR DBT DOCS URL</div><span class="url">https://YOUR_USERNAME.github.io/container-optimizer/dbt-docs/</span></div>
+      </div>
+    </div>
+  `
+},
+
+// ── STEP 6 ──────────────────────────────────────────────────
+{
+  phase: "Phase 3 — Power BI Setup",
   phaseIcon: "📊",
   phaseSub: "Connect Power BI to the live Excel data. Build and export your reports.",
   phaseTime: "~12 min total",
   title: "Install Power BI Desktop",
-  badge: "Step 6 of 10",
+  badge: "Step 7 of 11",
   content: `
     <div class="callout info"><div class="callout-icon">ℹ️</div><div>Power BI Desktop is <strong>completely free</strong> for individual use. You only need a paid plan if you want to publish to the Power BI Service / web.</div></div>
 
@@ -740,7 +790,7 @@ git push -u origin main</span></div>
 // ── STEP 6 ──────────────────────────────────────────────────
 {
   title: "Connect Power BI to the Excel Data",
-  badge: "Step 7 of 10",
+  badge: "Step 8 of 11",
   content: `
     <div class="callout info"><div class="callout-icon">📗</div><div>We connect directly to the Excel file on GitHub. Power BI can refresh from this URL automatically — no manual downloading ever.</div></div>
 
@@ -794,7 +844,7 @@ git push -u origin main</span></div>
 // ── STEP 7 ──────────────────────────────────────────────────
 {
   title: "Build Your Visuals in Power BI",
-  badge: "Step 8 of 10",
+  badge: "Step 9 of 11",
   content: `
     <div class="callout info"><div class="callout-icon">🎨</div><div>Here are the exact visuals to build. Each one maps to a column from the Gold schema. This takes about 5 minutes.</div></div>
 
@@ -856,7 +906,7 @@ git push -u origin main</span></div>
 // ── STEP 8 ──────────────────────────────────────────────────
 {
   title: "Export to PDF or Excel from Power BI",
-  badge: "Step 9 of 10",
+  badge: "Step 10 of 11",
   content: `
     <div class="callout good"><div class="callout-icon">📤</div><div>Power BI can export your entire report or individual visuals in multiple formats — no extra tools needed.</div></div>
 
@@ -915,12 +965,12 @@ git push -u origin main</span></div>
 
 // ── STEP 9 ──────────────────────────────────────────────────
 {
-  phase: "Phase 3 — Sharing with Others",
+  phase: "Phase 4 — Sharing with Others",
   phaseIcon: "🔗",
   phaseSub: "Let others fork and run their own copy in under 30 seconds.",
   phaseTime: "~1 min",
   title: "Share Your Repo for Others to Fork",
-  badge: "Step 10 of 10",
+  badge: "Step 11 of 11",
   content: `
     <div class="callout good"><div class="callout-icon">🎉</div><div>Your pipeline is live and fully automated. Here's how to share it so anyone can fork and run their own copy — without touching any code.</div></div>
 

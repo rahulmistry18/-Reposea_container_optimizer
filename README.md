@@ -64,6 +64,32 @@ reposea/
 │   ├── gold/summary.json            KPI aggregates
 │   └── exports/reposea_report.xlsx  Multi-sheet Power BI workbook
 │
+├── warehouse/
+│   └── bigquery_load.py        Loads Bronze/Silver/Gold into BigQuery (medallion datasets)
+│
+├── airflow/dags/
+│   └── reposea_medallion_dag.py  Daily DAG: extract -> transform -> BigQuery -> dbt -> (weekly) ML retrain
+│
+├── docker/
+│   ├── Dockerfile               Containerizes the pipeline
+│   └── docker-compose.yml       Local pipeline container + standalone Airflow sandbox
+│
+├── dbt/reposea/
+│   ├── models/staging/          stg_containers + source/schema tests
+│   ├── models/marts/            mart_lane_performance, mart_container_status
+│   └── seeds/                   trade_lane_dim, local dev seed (DuckDB target — no cloud creds needed)
+│
+├── ml/
+│   ├── generate_training_data.py  Simulates historical voyages from real port_intel/market_rates constants
+│   └── train_eta_model.py         XGBoost ETA-deviation regressor, time-based holdout, cost-impact conversion
+│
+├── analysis/
+│   └── generate_narrative.py    Writes LANE_RELIABILITY_NARRATIVE.md from live Gold data
+│
+├── bi/
+│   ├── POWERBI_STAR_SCHEMA_AND_DAX.md  Dimensional model, DAX measures, Publish-to-Web steps
+│   └── TABLEAU_PUBLISH_SETUP.md        Tableau Public publishing steps
+│
 ├── docs/
 │   ├── SETUP_GUIDE.html        Interactive step-by-step setup walkthrough
 │   └── POWER_BI_GUIDE.md       Power BI and Tableau connection guide
@@ -71,6 +97,39 @@ reposea/
 └── tests/
     └── test_pipeline.py        Pytest suite
 ```
+
+---
+
+## Portfolio Requirement Coverage
+
+Status against `portfolio_project_requirements.md`'s Project 1 spec, so this
+doesn't drift out of sync with what's actually built again:
+
+| Layer | Requirement | Status | Where |
+|---|---|---|---|
+| `DE` | Bronze/Silver/Gold medallion in BigQuery | Automated — runs every hour alongside the existing pipeline once `GCP_SA_KEY_B64`/`BQ_PROJECT_ID` secrets are set (Step 6 of `docs/SETUP_GUIDE.html`); skipped gracefully if unset | `.github/workflows/pipeline.yml`, `warehouse/bigquery_load.py` |
+| `DE` | Airflow DAG, daily extract → transform | Written as a reference orchestration artifact for a managed-Airflow environment (Cloud Composer/MWAA/Astronomer) — **not** what runs this fork online. The actual online automation is the GitHub Actions cron above, which fits this project's free/serverless design | `airflow/dags/reposea_medallion_dag.py`, `docker/docker-compose.yml` (local demo only) |
+| `DE` | Docker containerization | Done | `docker/Dockerfile` |
+| `ML` | XGBoost ETA deviation regression, MAE/RMSE on time-based holdout, cost-impact conversion | Done and tested — MAE/RMSE reported against a naive baseline. Retrains automatically every Monday (not hourly — the target barely moves within a week); see `ml/README.md` for why the training data is generated rather than pulled from the live (currently deterministic) simulator | `.github/workflows/ml_retrain.yml`, `ml/` |
+| `AE` | dbt staging + mart models, `not_null`/`relationships` tests, published docs | Done — `dbt build` passes 27/27 tests. Runs automatically every hour once the BigQuery secrets are set, and publishes docs to `/dbt-docs/` on the same GitHub Pages deploy as the dashboard | `.github/workflows/pipeline.yml`, `dbt/reposea/` |
+| `BI` | Power BI star schema, DAX measures, published publicly | Model + measures documented; publishing itself is a manual, one-time step you do in Power BI Desktop/Service (not something GitHub Actions can do on your behalf) | `bi/POWERBI_STAR_SCHEMA_AND_DAX.md` |
+| `DA` | Written narrative: worst lanes, repositioning action | Done — regenerates automatically every hour from live Gold data as part of the same pipeline run | `.github/workflows/pipeline.yml`, `analysis/generate_narrative.py` → `analysis/LANE_RELIABILITY_NARRATIVE.md` |
+
+**Not yet done, and worth knowing before you present this as "done":**
+- The live simulator's ETA is currently deterministic (no weather/congestion
+  noise applied), so the ML model above is trained on a realistic generated
+  dataset, not on `data/gold/` history. `ml/README.md` explains the gap and
+  the specific code change (`pipeline/state_manager.py`) that would close it.
+- `warehouse/bigquery_load.py` and the BigQuery/dbt steps in
+  `.github/workflows/pipeline.yml` are written against your actual module
+  names and validated for syntax, but not run end-to-end against a live GCP
+  project (no credentials available in the environment this was built in) —
+  worth a first manual `workflow_dispatch` run to confirm before trusting
+  the hourly schedule with it.
+- Publishing the Power BI report and/or Tableau workbook publicly is a
+  manual, one-time action in each tool — GitHub Actions gets the data
+  automated and ready; the actual "Publish to Web" click is yours to do
+  once.
 
 ---
 
@@ -150,7 +209,6 @@ PYTHONPATH=$(pwd) python -m pipeline.alerts
 
 ---
 
-<<<<<<< HEAD
 ## Container Lifecycle & Case Closure
 
 A container isn't tracked forever. Once it's been overdue long enough to
@@ -216,8 +274,6 @@ This clears `data/state/`, `data/bronze/`, `data/silver/`, and `data/gold/`
 
 ---
 
-
->>>>>>> 76e956aa78553138a7a7899222941f804c3e6f72
 ## Tests
 
 ```bash

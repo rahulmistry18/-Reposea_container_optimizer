@@ -10,7 +10,7 @@ from this pipeline — no manual downloads, no copy-paste. The data refreshes ev
 The pipeline auto-generates a formatted Excel workbook at every run:
 
 ```
-data/exports/container_report.xlsx
+data/exports/reposea_report.xlsx
 ```
 
 It contains 7 sheets:
@@ -30,7 +30,7 @@ It contains 7 sheets:
 2. **Home → Get Data → Excel Workbook**
 3. Enter the direct download URL:
    ```
-   https://raw.githubusercontent.com/rahulmistry18/-Reposea_container_optimizer/main/data/exports/container_report.xlsx
+   https://raw.githubusercontent.com/rahulmistry18/Reposea_container_optimizer/main/data/exports/reposea_report.xlsx
    ```
    Or point to the local file path if running locally.
 4. Select the **Containers** table (it's already an Excel Table — Power BI detects it automatically)
@@ -55,14 +55,14 @@ It contains 7 sheets:
 The dashboard's Gold JSON is publicly accessible:
 
 ```
-https://rahulmistry18.github.io/-Reposea_container_optimizer/data/gold/containers.json
-https://rahulmistry18.github.io/-Reposea_container_optimizer/data/gold/summary.json
+https://rahulmistry18.github.io/Reposea_container_optimizer/data/gold/containers.json
+https://rahulmistry18.github.io/Reposea_container_optimizer/data/gold/summary.json
 ```
 
 ### Power BI — Web Connector
 
 1. **Get Data → Web**
-2. URL: `https://rahulmistry18.github.io/-Reposea_container_optimizer/data/gold/containers.json`
+2. URL: `https://rahulmistry18.github.io/Reposea_container_optimizer/data/gold/containers.json`
 3. Power BI will parse the JSON array automatically
 4. Expand the nested columns as needed
 
@@ -90,7 +90,7 @@ Parquet is 3-5× smaller than Excel and 10× faster to load.
 
 ### Power BI — Parquet
 1. **Get Data → Parquet**
-2. URL: `https://raw.githubusercontent.com/rahulmistry18/-Reposea_container_optimizer/main/data/gold/containers.parquet`
+2. URL: `https://raw.githubusercontent.com/rahulmistry18/Reposea_container_optimizer/main/data/gold/containers.parquet`
 
 ---
 
@@ -134,7 +134,7 @@ Parquet is 3-5× smaller than Excel and 10× faster to load.
 ## 🆘 Troubleshooting
 
 **"File not found" on raw GitHub URL**
-→ Check that `data/exports/container_report.xlsx` was committed by the pipeline.
+→ Check that `data/exports/reposea_report.xlsx` was committed by the pipeline.
 → The first run happens on fork setup. Check the Actions tab for errors.
 
 **Power BI shows old data**

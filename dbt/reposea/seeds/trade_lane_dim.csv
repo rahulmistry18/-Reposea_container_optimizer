@@ -1,0 +1,5 @@
+trade_lane,trade_lane_label,region_pair
+TRANS_PAC,Trans-Pacific,Asia-North America
+TRANS_ATL,Trans-Atlantic,Europe-North America
+ASIA_EUR,Asia-Europe,Asia-Europe
+INTRA_ASIA,Intra-Asia,Asia-Asia

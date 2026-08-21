@@ -1,0 +1,25 @@
+# Committed on purpose — no secrets live here, only env var references.
+# Point dbt at this file with:  export DBT_PROFILES_DIR=$(pwd)/dbt/reposea
+#
+# `dev` target: DuckDB, reads the seed CSV — runs anywhere, no cloud account
+#   needed. This is what a reviewer cloning the repo should use to actually
+#   `dbt build` this project in under a minute.
+# `prod` target: BigQuery, reads the tables warehouse/bigquery_load.py loads.
+#   Requires GOOGLE_APPLICATION_CREDENTIALS + BQ_PROJECT_ID.
+
+reposea:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('REPOSEA_DUCKDB_PATH', 'reposea_dev.duckdb') }}"
+      threads: 4
+
+    prod:
+      type: bigquery
+      method: service-account
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
+      project: "{{ env_var('BQ_PROJECT_ID') }}"
+      dataset: reposea_analytics
+      location: "{{ env_var('BQ_LOCATION', 'US') }}"
+      threads: 8
