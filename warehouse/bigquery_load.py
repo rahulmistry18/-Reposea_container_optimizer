@@ -115,7 +115,14 @@ def _append_history_snapshot(client, project_id, dataset_id, rows):
         source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
         autodetect=True,
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
-        time_partitioning=bigquery.TimePartitioning(field="pipeline_run_ts"),
+        time_partitioning=bigquery.TimePartitioning(
+            field="pipeline_run_ts",
+            # Free-tier safety net: at ~35 containers/hour this table would take
+            # 60+ years to reach the 10GB free storage cap on its own, but capping
+            # retention costs nothing and avoids unbounded growth if fleet size
+            # changes later. Old partitions past this age are dropped automatically.
+            expiration_ms=180 * 24 * 60 * 60 * 1000,  # 180 days
+        ),
         schema_update_options=[bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION],
     )
     ndjson = "\n".join(json.dumps(r) for r in rows).encode("utf-8")
