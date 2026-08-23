@@ -63,6 +63,24 @@ def _load_json_rows(path: Path):
     return raw if isinstance(raw, list) else [raw]
 
 
+def _sanitize_empty_structs(obj):
+    """BigQuery's schema autodetect can't infer a type for an empty struct
+    ({}) or empty array ([]) — it has no fields to infer from. Shows up on
+    market.json's fbx_rates, which is {} whenever the live Freightos feed
+    didn't return data that run. Recursively replace any empty dict/list
+    with None so BigQuery sees a nullable field instead of an untyped
+    empty record."""
+    if isinstance(obj, dict):
+        if not obj:
+            return None
+        return {k: _sanitize_empty_structs(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        if not obj:
+            return None
+        return [_sanitize_empty_structs(v) for v in obj]
+    return obj
+
+
 def load_all(project_id: str, location: str = "US", snapshot_history: bool = False):
     from google.cloud import bigquery
     from google.cloud.exceptions import NotFound
@@ -83,6 +101,7 @@ def load_all(project_id: str, location: str = "US", snapshot_history: bool = Fal
             rows = _load_json_rows(path)
             if not rows:
                 continue
+            rows = [_sanitize_empty_structs(r) for r in rows]
 
             table_ref = dataset_ref.table(table_name)
             job_config = bigquery.LoadJobConfig(
