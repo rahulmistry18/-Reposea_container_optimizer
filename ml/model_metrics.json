@@ -1,0 +1,29 @@
+{
+  "holdout_type": "time_based (last 15% of voyages by scheduled_departure)",
+  "n_train": 3400,
+  "n_test": 600,
+  "mae_hours": 5.21,
+  "rmse_hours": 6.44,
+  "baseline_mean_predictor_mae_hours": 20.4,
+  "baseline_mean_predictor_rmse_hours": 22.28,
+  "cost_impact_mae_usd_per_voyage": 17.68,
+  "feature_importance": {
+    "seasonal_delay_factor": 0.7365999817848206,
+    "trade_lane_ASIA_EUR": 0.09510000050067902,
+    "trade_lane_TRANS_PAC": 0.054099999368190765,
+    "scheduled_transit_hours": 0.03319999948143959,
+    "departure_month": 0.01850000023841858,
+    "trade_lane_TRANS_ATL": 0.012799999676644802,
+    "vessel_class_ULCV": 0.012299999594688416,
+    "vessel_class_Feeder": 0.008700000122189522,
+    "dest_congestion": 0.007199999876320362,
+    "origin_congestion": 0.004100000020116568,
+    "vessel_class_Neopanamax": 0.004000000189989805,
+    "vessel_class_Panamax": 0.003599999938160181,
+    "lease_type_Master Lease": 0.002199999988079071,
+    "trade_lane_INTRA_ASIA": 0.002099999925121665,
+    "lease_type_Long-Term": 0.0019000000320374966,
+    "departure_dow": 0.0017999999690800905,
+    "lease_type_One-Way": 0.0017999999690800905
+  }
+}
